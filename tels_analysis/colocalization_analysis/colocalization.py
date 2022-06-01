@@ -34,3 +34,11 @@ class colocalization:
                         listB.pop(0)
                 return toReturn
         this.elements = sort(this.elements)
+
+    def getColocInfo(this):
+        toReturn = []
+        for ele in this.elements:
+            temp = (this.length, )
+            toAdd = ele.getElementInfo() + temp
+            toReturn.append(toAdd)
+        return toReturn

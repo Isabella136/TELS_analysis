@@ -1,7 +1,7 @@
 class reads:
-    def __init__(this, filename):
+    def __init__(this, fileName, SOURCE_PREFIX, SOURCE_SUFFIX, READS_LENGTH):
         this.readsDict = {}
-        Reads_length_file = open("deduplicated_sequel-demultiplex." + filename + "ccs.fastq.gz_reads_length.json", "r")
+        Reads_length_file = open(SOURCE_PREFIX + fileName + SOURCE_SUFFIX + READS_LENGTH, "r")
         line = Reads_length_file.readline()
         readNameBool = False
         lengthBool = False
