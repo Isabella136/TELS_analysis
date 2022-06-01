@@ -10,9 +10,9 @@ class reads:
         for c in line:
             if c == '\"':
                 readNameBool = not(readNameBool)
-            elif c == ',':
+            elif (c == ',') or (c == '}'):
                 lengthBool = False
-                readsDict.update({name:int(length)})
+                this.readsDict.update({name:int(length)})
                 name = ""
                 length = ""
             elif c == ':':
@@ -24,4 +24,4 @@ class reads:
             elif lengthBool:
                 length = length + c
     def getLength(this, name):
-        return readsDict[name]
+        return this.readsDict[name]

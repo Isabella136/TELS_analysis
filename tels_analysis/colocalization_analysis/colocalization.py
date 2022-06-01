@@ -1,14 +1,15 @@
 from . import element
 
 class colocalization:
-    def __init__(this, ARG, ARG_start, ARG_end, MGE_list, MGE_start_list, MGE_end_list, KEGG_list, KEGG_start_list, KEGG_end_list):
+    def __init__(this, read_length, ARG, ARG_start, ARG_end, MGE_list, MGE_start_list, MGE_end_list, KEGG_list, KEGG_start_list, KEGG_end_list):
         this.elements = []
+        this.length = read_length
         this.elements.append(element.element(ARG, ARG_start, ARG_end, "ARG"))
         for i in range(0, len(MGE_list)):
             this.elements.append(element.element(MGE_list[i], MGE_start_list[i], MGE_end_list[i], "MGE"))
         for i in range(0, len(KEGG_list)):
             this.elements.append(element.element(KEGG_list[i], KEGG_start_list[i], KEGG_end_list[i], "KEGG"))
-        orderElements(this)
+        this.orderElements()
 
     def orderElements(this):
         def sort(eleList):
@@ -33,6 +34,3 @@ class colocalization:
                         listB.pop(0)
                 return toReturn
         this.elements = sort(this.elements)
-
-    def defineReadLength(this, read_length):
-        this.length = read_length
