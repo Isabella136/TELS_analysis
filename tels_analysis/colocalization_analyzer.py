@@ -1,12 +1,12 @@
 from tels_analysis.colocalization_analysis import colocalization
 from tels_analysis.reads import reads
 
-class colocalization_analysis:
-    def __init__(this, filename):
-        readList = reads.reads(filename)
+class colocalization_analyzer:
+    def __init__(this, fileName, SOURCE_PREFIX, SOURCE_SUFFIX, COLOCALIZATIONS, READS_LENGTH, COLOCALIZATION_ANALYSIS):
+        readList = reads.reads(fileName, SOURCE_PREFIX, SOURCE_SUFFIX, READS_LENGTH)
         this.readsDict = {}
         this.colocalizationList = []
-        colocalizationFile = open("deduplicated_sequel-demultiplex." + filename + "ccs.fastq.gz_colocalizations.csv", "r")
+        colocalizationFile = open(SOURCE_PREFIX + fileName + SOURCE_SUFFIX + COLOCALIZATIONS, "r")
         i = 0
         for line in colocalizationFile:
             i += 1
