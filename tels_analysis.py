@@ -20,7 +20,7 @@ fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
 			"SXTMC",		"SXTNEGA",		"SXTNEGAM",		"SXTNEGM"]
 
 outputFolder = ""
-configfile = ""
+configFile = ""
 try:
     options, args = getopt.getopt(sys.argv[1:], "hc:o:")
 except getopt.GetoptError:
@@ -31,16 +31,19 @@ for opt, arg in options:
         print("List of arguments:\n\n\n-c: config file\n-h: help\n-o: output folder\n")
         sys.exit()
     elif opt == "-c":
-        configfile = arg
+        configFile = arg
     elif opt == "-o":
         outputFolder = arg
+
 config = configparser.ConfigParser()
 config.read(configFile)
 for fileName in fileList:
 	colocalizationAnalyzer = colocalization_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 												   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
 												   config.get("SOURCE_EXTENSION", "COLOCALIZATIONS"), 
-												   config.get("SOURCE_EXTENSION", "READS_LENGTH"), 
-												   config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
-
+												   config.get("SOURCE_EXTENSION", "READS_LENGTH"))
+	colocalizationAnalyzer.makeChart( fileName, outputFolder + "/" + 
+								  config.get("OUTPUT_FILE", "OUTPUT_PREFIX"), 
+								  config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"), 
+								  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
 
