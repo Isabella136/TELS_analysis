@@ -1,5 +1,6 @@
 import configparser
 from tels_analysis.colocalization_analyzer import colocalization_analyzer
+from tels_analysis.statistical_analyzer import statistical_analyzer
 import sys, getopt
 
 fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
@@ -37,6 +38,11 @@ for opt, arg in options:
 
 config = configparser.ConfigParser()
 config.read(configFile)
+statisticalAnalyzer = statistical_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
+												   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
+												   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+												   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
+												   config.get("SOURCE_EXTENSION", "STATS"))
 for fileName in fileList:
 	colocalizationAnalyzer = colocalization_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 												   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
@@ -46,4 +52,6 @@ for fileName in fileList:
 								  config.get("OUTPUT_FILE", "OUTPUT_PREFIX"), 
 								  config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"), 
 								  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
+	statisticalAnalyzer.analyzeFile(fileName)
 
+statisticalAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "STATISTICAL_ANALYSIS"))
