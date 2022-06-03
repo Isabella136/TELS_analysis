@@ -12,11 +12,11 @@ class indiv_stats:
     def getStats(this):
         toReturn = this.sample
         toReturn = toReturn + "," + this.seqPlatform
-        toReturn = toReturn + "," + this.raw_reads
-        toReturn = toReturn + "," + this.deduplicated_reads
-        toReturn = toReturn + "," + this.duplication
-        toReturn = toReturn + "," + this.ARG_on_target
-        toReturn = toReturn + "," + this.MGE_on_target
+        toReturn = toReturn + "," + str(this.raw_reads)
+        toReturn = toReturn + "," + str(this.deduplicated_reads)
+        toReturn = toReturn + "," + str(this.duplication)
+        toReturn = toReturn + "," + str(this.ARG_on_target)
+        toReturn = toReturn + "," + str(this.MGE_on_target)
         return toReturn
 
     def findAllStats(this, filePath_stats, filePath_ARG, filePath_MGE):

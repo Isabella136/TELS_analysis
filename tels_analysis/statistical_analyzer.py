@@ -1,4 +1,4 @@
-from statistical_analysis.indiv_stats import indiv_stats
+from tels_analysis.statistical_analysis.indiv_stats import indiv_stats
 
 class statistical_analyzer:
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension

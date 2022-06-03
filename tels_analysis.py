@@ -25,7 +25,7 @@ configFile = ""
 try:
     options, args = getopt.getopt(sys.argv[1:], "hc:o:")
 except getopt.GetoptError:
-    print("SNP_Verification.py -i <inputFile> -o <outputFolder>")
+    print("tels_analysis.py -c <configFile> -o <outputFolder>")
     sys.exit(-1)
 for opt, arg in options:
     if opt == "-h":
