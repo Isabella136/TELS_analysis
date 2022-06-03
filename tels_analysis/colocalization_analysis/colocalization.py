@@ -1,9 +1,10 @@
 from . import element
 
 class colocalization:
-    def __init__(this, read_length, ARG, ARG_start, ARG_end, MGE_list, MGE_start_list, MGE_end_list, KEGG_list, KEGG_start_list, KEGG_end_list):
+    def __init__(this, read_name, read_length, ARG, ARG_start, ARG_end, MGE_list, MGE_start_list, MGE_end_list, KEGG_list, KEGG_start_list, KEGG_end_list):
         this.elements = []
         this.length = read_length
+        this.name - read_name
         this.elements.append(element.element(ARG, ARG_start, ARG_end, "ARG"))
         for i in range(0, len(MGE_list)):
             this.elements.append(element.element(MGE_list[i], MGE_start_list[i], MGE_end_list[i], "MGE"))
@@ -38,7 +39,7 @@ class colocalization:
     def getColocInfo(this):
         toReturn = []
         for ele in this.elements:
-            temp = (this.length, )
+            temp = (this.length, this.name)
             toAdd = ele.getElementInfo() + temp
             toReturn.append(toAdd)
         return toReturn

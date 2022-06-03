@@ -16,7 +16,8 @@ class colocalization_analyzer:
             if i > 1:
                 params = line.split(',')
                 read_length = readList.getLength(params[0])
-                ARG = params[1]
+                read_name = params[0]
+                ARG = params[1].split('|')[0]
                 ARG_start = params[2][:params[2].find(":")]
                 ARG_end = params[2][params[2].find(":")+1:]
                 MGE_list = params[3].split(';')
@@ -33,15 +34,15 @@ class colocalization_analyzer:
                 for pos in KEGG_pos:
                     KEGG_start_list.append(pos[:pos.find(":")])
                     KEGG_end_list.append(pos[pos.find(":")+1:])
-                this.colocalizationList.append(colocalization.colocalization(read_length, ARG, ARG_start, ARG_end, MGE_list, MGE_start_list, MGE_end_list, KEGG_list, KEGG_start_list, KEGG_end_list))
+                this.colocalizationList.append(colocalization.colocalization(read_length, read_name, ARG, ARG_start, ARG_end, MGE_list, MGE_start_list, MGE_end_list, KEGG_list, KEGG_start_list, KEGG_end_list))
     
     def makeChart(this, fileName, OUTPUT_PREFIX, OUTPUT_SUFFIX, COLOCALIZATION_ANALYSIS):
         robjects.r('''
             install.packages("tidyverse")
             library(ggplot2)
-            r_makeChart <- function(x_val, y_val, col_val, fileName) {
+            r_makeChart <- function(x_val, y_val, col_val, label_val, x_val_start, x_val_end, fileName) {
                 x_val_mean <-(x_val_start+x_val_end)/2
-                mylabels<-data.frame(labels=c('A','B','C'),pos=x_val_mean)
+                mylabels<-data.frame(labels=label_val,pos=x_val_mean)
                 myColors <- c("0" = "red3", "1" = "gold", "2" = "deepskyblue", "3" = "springgreen1", "4" = "green4", "5" = "darkgreen")
                 mydata<-data.frame(x=x_val,y=rep(y_val,each=5),c=rep(col_val,each=5))
                 png(file=fileName, width = 10000, height = 10000)
@@ -59,14 +60,23 @@ class colocalization_analyzer:
             x_val = []
             y_val = []
             col_val = []
+            label_val = []
+            x_val_start = []
+            x_val_end = []
             for i in range(0,len(colocInfoList)):
                 if index >= len(colocInfoList[i]):
                     x_val.extend(-1,-1,-1,-1,-1)
-                    y_val.append("empty")
+                    x_val_start.append(-1)
+                    x_val_end.append(-1)
+                    y_val.append(colocInfoList[i][index][5])
+                    label_val.append("empty")
                     col_val.append(0)
                 else:
                     x_val.extend(0,colocInfoList[i][index][1], colocInfoList[i][index][1] + 1, colocInfoList[i][index][2], colocInfoList[i][index][4])
-                    y_val.append(colocInfoList[i][index][0])
+                    x_val_start.append(colocInfoList[i][index][1])
+                    x_val_end.append(colocInfoList[i][index][2])
+                    label_val.append(colocInfoList[i][index][0])
+                    y_val.append(colocInfoList[i][index][5])
                     col_val.append(colocInfoList[i][index][3])
                     if index == (len(colocInfoList[i]) - 1):
                         notCompleted -= 1
