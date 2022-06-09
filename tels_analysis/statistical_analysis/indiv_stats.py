@@ -1,4 +1,4 @@
-from . import fileDict
+from tels_analysis import fileDict
 
 class indiv_stats:
     def __init__ (this, fileName):

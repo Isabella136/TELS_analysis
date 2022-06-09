@@ -6,7 +6,7 @@ class element:
         this.type = element_type
         this.color = -1
         if this.type == "ARG":
-            if (this.element_name.find("Metals") != -1) or (this.element_name.find("Biocides") != -1):
+            if (this.name.find("Metals") != -1) or (this.name.find("Biocides") != -1):
                 this.color = 3
             else:
                 this.color = 2

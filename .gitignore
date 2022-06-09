@@ -1,7 +1,4 @@
-
-.vs/ProjectSettings.json
-.vs/slnx.sqlite
-.vs/TELS_analysis/v17/.suo
-.vs/VSWorkspaceState.json
-test.png
-.vs/PythonSettings.json
+.vs/*
+output/*
+temp_files/*
+*.pyc
