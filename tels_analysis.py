@@ -1,5 +1,6 @@
 import configparser
 from tels_analysis.colocalization_analyzer import colocalization_analyzer
+from tels_analysis.heatmap_analyzer import heatmap_analyzer
 from tels_analysis.statistical_analyzer import statistical_analyzer
 from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
 import sys, getopt
@@ -69,3 +70,12 @@ if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 	for fileName in fileList:
 		crAnalyzer.analyzeFile(fileName, outputFolder + "/ARG_composition", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
 	crAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS"))
+if config.getboolean("STEPS", "HEATMAP"):
+	heatmapAnalyzer = heatmap_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
+													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
+													   config.get("SOURCE_FILE", "MEGARES"))
+	for fileName in fileList:
+		heatmapAnalyzer.addToMaps(fileName)
+	heatmapAnalyzer.makeMaps(outputFolder + "/ARG_heatmap", config.get("OUTPUT_EXTENSION", "HEATMAP"))
