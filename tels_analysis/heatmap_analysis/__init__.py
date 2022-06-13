@@ -23,6 +23,7 @@ def megares_analyzer(megaresFile):
     for line in megares:
         splitLine = line.split('|')
         tempTuple = (splitLine[2], splitLine[3])
+        if splitLine[2] == "betalactams": tempTuple = ("Betalactams", splitLine[3])
         if splitLine[1] == "Drugs":
             if drugList.count(tempTuple) == 0:
                 drugList.append(tempTuple)

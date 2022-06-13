@@ -1,5 +1,5 @@
 import configparser
-from tels_analysis.colocalization_analyzer import colocalization_analyzer
+#from tels_analysis.colocalization_analyzer import colocalization_analyzer
 from tels_analysis.heatmap_analyzer import heatmap_analyzer
 from tels_analysis.statistical_analyzer import statistical_analyzer
 from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
@@ -41,21 +41,21 @@ for opt, arg in options:
 config = configparser.ConfigParser()
 config.read(configFile)
 
-if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
-	for fileName in fileList:
-		colocalizationAnalyzer = colocalization_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "COLOCALIZATIONS"), 
-													   config.get("SOURCE_EXTENSION", "READS_LENGTH"))
-		colocalizationAnalyzer.makeChart( fileName, outputFolder + "/" + 
-									  config.get("OUTPUT_FILE", "OUTPUT_PREFIX"), 
-									  config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"), 
-									  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
+#if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
+#	for fileName in fileList:
+#		colocalizationAnalyzer = colocalization_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
+#													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
+#													   config.get("SOURCE_EXTENSION", "COLOCALIZATIONS"), 
+#													   config.get("SOURCE_EXTENSION", "READS_LENGTH"))
+#		colocalizationAnalyzer.makeChart( fileName, outputFolder + "/" + 
+#									  config.get("OUTPUT_FILE", "OUTPUT_PREFIX"), 
+#									  config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"), 
+#									  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
 
 if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
 	statisticalAnalyzer = statistical_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+													   config.get("SOURCE_EXTENSION", "A_TO_MEGARES"), 
 													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 													   config.get("SOURCE_EXTENSION", "STATS"))
 	for fileName in fileList:
