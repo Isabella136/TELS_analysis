@@ -3,11 +3,11 @@ from tels_analysis.compos_richness_analysis.indiv_composition import indiv_compo
 class compos_richness_analyzer:
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
 
-    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV, SHORT_MGE):
+    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, ARG_SAM_ANALYSIS, MGE_SAM_ANALYSIS):
         this.source_prefix = SOURCE_PREFIX
         this.source_suffix = SOURCE_SUFFIX
-        this.amr_reads = SHORT_AMR_DIV
-        this.mge_reads = SHORT_MGE
+        this.amr_reads = ARG_SAM_ANALYSIS
+        this.mge_reads = MGE_SAM_ANALYSIS
         this.compos_richness_list = []
         this.MGE_list = []
 
@@ -17,14 +17,12 @@ class compos_richness_analyzer:
         this.compos_richness_list.append(fileComp.getData())
 
         mge_file = open(this.filePath(fileName, this.mge_reads), "r")
-        lineIndex = 0
         for line in mge_file:
-            lineIndex += 1
-            if lineIndex < 21:
-                continue
-            mge = line.split(',')[0]
-            if this.MGE_list.count(mge) == 0:
-                this.MGE_list.append(mge)
+            mgeList = line.split(',')[1:]
+            for mge in mgeList[:-1]:
+                if mge == "": continue
+                if this.MGE_list.count(mge) == 0:
+                    this.MGE_list.append(mge)
 
     def printAnalysis(this, outputFolder, COMPOS_RICHNESS_ANALYSIS):
         analysis = open(outputFolder + "/" + COMPOS_RICHNESS_ANALYSIS, "w")

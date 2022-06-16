@@ -51,7 +51,7 @@ def fileDict(fileName):
     sample = sample + " + bait " + fileName
     return (sample, seqPlatform)
 
-def heatmap_x_axis(fileName):
+def x_axis(fileName):
     sub_table = ""
     x_axis = ""
 
@@ -85,6 +85,55 @@ def heatmap_x_axis(fileName):
     elif fileName[0] == 'M':
         x_axis = "TELSeq" + x_axis + "+MGE probes"
     else: #fileName[0] == 'N'
-        x_axis = "PacBio"
+        x_axis = "PacBio" + x_axis
 
     return (sub_table,x_axis)
+
+def megares_analyzer(megaresFile):
+    def sortList(mechanismsList):
+        if len(mechanismsList) == 1:
+            return mechanismsList
+        else:
+            listA = sortList(mechanismsList[0:int(len(mechanismsList)/2)])
+            listB = sortList(mechanismsList[int(len(mechanismsList)/2):])
+            toReturn = []
+            for i in range(0,len(mechanismsList)):
+                if len(listA) == 0:
+                    toReturn.append(listB.pop(0))
+                elif len(listB) == 0:
+                    toReturn.append(listA.pop(0))
+                elif listA[0][0] < listB[0][0]:
+                    toReturn.append(listA.pop(0))
+                else:
+                    toReturn.append(listB.pop(0))
+            return toReturn
+    drugList = []
+    otherList = []
+    megares = open(megaresFile, "r")
+    megares.readline()
+    for line in megares:
+        splitLine = line.split('|')
+        tempTuple = (splitLine[2], splitLine[3])
+        if splitLine[2] == "betalactams": tempTuple = ("Betalactams", splitLine[3])
+        if splitLine[1] == "Drugs":
+            if drugList.count(tempTuple) == 0:
+                drugList.append(tempTuple)
+        else:
+            if otherList.count(tempTuple) == 0:
+                otherList.append(tempTuple)
+    megares.close()
+    drugList = sortList(drugList)
+    otherList = sortList(otherList)
+    return (drugList, otherList)
+
+def getGenesLength(megaresFile):
+    megares = open(megaresFile, "r")
+    toReturn = {}
+    header = False
+    name = ""
+    for line in megares:
+        header = not(header)
+        if header: 
+            name = line.split('|')[0]
+            continue
+        toReturn.update({name:len(line)})

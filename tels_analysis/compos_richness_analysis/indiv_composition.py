@@ -35,30 +35,33 @@ class indiv_composition:
 
     def findARGComposition(this, filepath):
         arg_composition_file = open(filepath, "r")
-        lineNum = 0
         classList = []
         mechanismList = []
         groupList= []
         for line in arg_composition_file:
-            lineNum += 1
-            if lineNum < 20:
-                continue
-            arg_header = line.split(',')[0].split('|')
-            if len(arg_header) == 6: continue
-            if arg_header[1] == "Drugs":
-                this.arg_composition_data[0] += 1
-            elif arg_header[1] == "Metals":
-                this.arg_composition_data[1] += 1
-            elif arg_header[1] == "Multi-compound":
-                this.arg_composition_data[2] += 1
-            else: #arg_type == "Biocides"
-                this.arg_composition_data[3] += 1
-            if classList.count(arg_header[2]) == 0:
-                classList.append(arg_header[2])
-            if mechanismList.count(arg_header[3]) == 0:
-                mechanismList.append(arg_header[3])
-            if groupList.count(arg_header[4]) == 0:
-                groupList.append(arg_header[4])
+            blank_space = 0
+            arg_header_list = line.split(',')[1:]
+            for arg in arg_header_list:
+                if arg == "":
+                    blank_space += 1
+                    if (blank_space % 2) == 0:
+                        break
+                    continue
+                arg_header = arg.split('|')
+                if arg_header[1] == "Drugs":
+                    this.arg_composition_data[0] += 1
+                elif arg_header[1] == "Metals":
+                    this.arg_composition_data[1] += 1
+                elif arg_header[1] == "Multi-compound":
+                    this.arg_composition_data[2] += 1
+                else: #arg_type == "Biocides"
+                    this.arg_composition_data[3] += 1
+                if classList.count(arg_header[2]) == 0:
+                    classList.append(arg_header[2])
+                if mechanismList.count(arg_header[3]) == 0:
+                    mechanismList.append(arg_header[3])
+                if groupList.count(arg_header[4]) == 0:
+                    groupList.append(arg_header[4])
         arg_composition_file.close()
         this.arg_class_richness = len(classList)
         this.arg_group_richness = len(groupList)
@@ -66,14 +69,19 @@ class indiv_composition:
 
     def findMGEComposition(this, filepath):
         mge_composition_file = open(filepath)
-        lineNum = 0
+        mgeList = []
         for line in mge_composition_file:
-            lineNum += 1
-            if lineNum < 19:
-                continue
-            else:
-                this.mge_richness = int(line.split(',')[1][:-1])
-                break
+            blank_space = 0
+            mge_header_list = line.split(',')[1:]
+            for mge in mge_header_list:
+                if mge == "":
+                    blank_space += 1
+                    if (blank_space % 2) == 0:
+                        break
+                    continue
+                if mgeList.count(mge) == 0:
+                    mgeList.append(mge)
+        this.mge_richness = len(mgeList)
         mge_composition_file.close()
 
     def makePieChart(this, filepath):
