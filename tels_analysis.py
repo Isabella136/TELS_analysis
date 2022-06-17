@@ -5,7 +5,7 @@ from tels_analysis.heatmap_analyzer import heatmap_analyzer
 from tels_analysis.statistical_analyzer import statistical_analyzer
 from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
 from tels_analysis.abundance_analyzer import abundance_analyzer
-import sys, getopt
+import sys, getopt, gzip, shutil, os
 
 fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
 			"BFV2MA",		"BFV2MB",		"BFV2MC",		"BFV2NEGA",		"BFV2NEGAM",	"BFV2NEGM",		
@@ -83,6 +83,7 @@ if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 	for fileName in fileList:
 		crAnalyzer.analyzeFile(fileName, outputFolder + "/ARG_composition", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
 	crAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS"))
+
 if config.getboolean("STEPS", "HEATMAP"):
 	heatmapAnalyzer = heatmap_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
@@ -92,12 +93,25 @@ if config.getboolean("STEPS", "HEATMAP"):
 	for fileName in fileList:
 		heatmapAnalyzer.addToMaps(fileName)
 	heatmapAnalyzer.makeMaps(outputFolder + "/ARG_heatmap", config.get("OUTPUT_EXTENSION", "HEATMAP"))
+
+if config.getboolean("STEPS", "FILE_SIZE"):
+	fileOfSizes = open(outputFolder + "/" + config.get("OUTPUT_EXTENSION", "FILE_SIZE"), "w")
+	for fileName in fileList:
+		with gzip.open(config.get("SOURCE_FILE", "INITIAL_SOURCE_PREFIX") + fileName + config.get("SOURCE_FILE", "SOURCE_SUFFIX"), "rb") as input:
+			with open ("temp_files/deduplicated_sequel-demultiplex.temp.ccs.fastq", "wb") as output:
+				shutil.copyfileobj(input, output)
+		fileOfSizes.write(fileName + "," + str(os.stat("temp_files/deduplicated_sequel-demultiplex.temp.ccs.fastq").st_size) + ",\n")
+	fileOfSizes.close()
+
 if config.getboolean("STEPS", "VIOLIN"):
 	abundanceAnalyzer = abundance_analyzer(config.get("SOURCE_FILE", "ARG_SAM_ANALYSIS_SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_FILE", "INITIAL_SOURCE_PREFIX"),
+													   outputFolder + "/" + config.get("OUTPUT_EXTENSION", "FILE_SIZE"),
 													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
 													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"),
-													   config.get("SOURCE_FILE", "MEGARES"))
+													   config.get("SOURCE_FILE", "MEGARES_FASTA"))
 	for fileName in fileList:
 		abundanceAnalyzer.findAbsoluteAbundance(fileName)
+	abundanceAnalyzer.makeViolinPlot(outputFolder, config.get("OUTPUT_EXTENSION", "VIOLIN"))
+
+if config.getboolean("STEPS", "STACKED"):

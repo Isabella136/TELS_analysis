@@ -1,0 +1,2 @@
+from tels_analysis import getGenesLength
+from tels_analysis import getSampleGroup

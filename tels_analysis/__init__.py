@@ -134,6 +134,45 @@ def getGenesLength(megaresFile):
     for line in megares:
         header = not(header)
         if header: 
-            name = line.split('|')[0]
+            name = line.split('|')[0][1:]
             continue
         toReturn.update({name:len(line)})
+    megares.close()
+    return toReturn
+
+def getSampleGroup(fileName):
+    sub_table = ""
+    legend = ""
+
+    #Determine organism
+    if fileName[0] == 'B':
+        sub_table = "Bovine"
+        fileName = fileName[2:]
+    elif fileName[0] == 'H':
+        sub_table = "Human"
+        fileName = fileName[2:]
+    elif fileName[0] == 'M':
+        sub_table = "Mock"
+        fileName = fileName[2:]
+    else: #fileName[0] = 'S'
+        sub_table = "Soil"
+        fileName = fileName[1:]
+
+    #Determine whether V2 or XT
+    if fileName[0] == 'V':
+        sub_table = "+V2"
+        fileName = fileName[2:]
+    else: #fileName[0] = 'X'
+        sub_table = "+XT"
+        fileName = fileName[2:]
+
+    #Determine probes
+    if fileName[0:2] == "AM":
+        legend = "TELSeq+ARG-MGE probes"
+    elif fileName[0] == 'A':
+        legend = "TELSeq+ARG probes"
+    elif fileName[0] == 'M':
+        legend = "TELSeq+MGE probes"
+    else: #fileName[0] == 'N'
+        legend = "PacBio"
+    return (sub_table,legend)
