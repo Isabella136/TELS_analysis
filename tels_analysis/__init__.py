@@ -160,10 +160,10 @@ def getSampleGroup(fileName):
 
     #Determine whether V2 or XT
     if fileName[0] == 'V':
-        sub_table = "+V2"
+        sub_table = sub_table + "+V2"
         fileName = fileName[2:]
     else: #fileName[0] = 'X'
-        sub_table = "+XT"
+        sub_table = sub_table + "+XT"
         fileName = fileName[2:]
 
     #Determine probes
