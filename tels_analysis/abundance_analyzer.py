@@ -34,26 +34,29 @@ class abundance_analyzer:
                 for x_axis_name in this.abundance_dict[sample]:
                     this.abundance_dict[sample][x_axis_name].makeAbundanceRelative(this.initial_source_size[sample][x_axis_name], this.genes_length)
         makeAbundanceRelative()
-        fig, axs = pyplot.subplots(figsize=(50, 25))
+        fig, axs = pyplot.subplots(1,4,figsize=(70, 25),sharey="row")
         fig.suptitle("ARG Relative Abundance", fontsize=50)
-        paletteList = ["#e9e5ef", "#d7c6dc", "#c7a6c8", "#ca86b6", "#d05d9d", "#c7397a", "#aa2457", "#801241",
-                       "#f7f2c9", "#f2e1a8", "#ebc778", "#e6a853", "#db873a", "#c76928", "#a84d1a", "#813916",
-                       "#e9f4f7", "#d6ebe8", "#b1d8cf", "#87c2b1", "#62ac8d", "#449567", "#287743", "#0d5b2c",
-                       "#f2f2f2", "#dfdfdf", "#c6c6c6", "#a8a8a8", "#868686", "#686868", "#474747", "#212121"]
-        x_axis_list = []
-        abundance_list = {}
+        fig.add_subplot(111, frame_on=False)
+        pyplot.tick_params(labelcolor="none", bottom=False, left=False)
+        pyplot.ylabel("Log Relative Abundance",size=40)
+        paletteList = ["PuRd", "YlOrBr", "BuGn", "Greys"]
+        i = 0
         for sample in this.abundance_dict:
+            pyplot.sca(axs[i])
+            x_axis_list = []
+            abundance_list = {}
             for x_axis_name in this.abundance_dict[sample]:
-                abundance_list[x_axis_name + "_" + sample] = this.abundance_dict[sample][x_axis_name].getAbundance()
+                abundance_list[x_axis_name] = this.abundance_dict[sample][x_axis_name].getAbundance()
                 x_axis_list.append(x_axis_name)
-        df = pandas.DataFrame.from_dict(abundance_list)
-        seaborn.set_style("whitegrid")
-        seaborn.set_context("paper")
-        ax = seaborn.violinplot(data=df, inner="box", palette=paletteList)
-        ax.set_xlabel(xlabel='Samples',size=40)
-        ax.set_ylabel(ylabel='Log Relative Abundance',size=40)
-        ax.set_xticklabels(labels=x_axis_list,fontsize=20,rotation=90)
-        pyplot.yticks(fontsize=20)
+            df = pandas.DataFrame.from_dict(abundance_list)
+            seaborn.set_style("whitegrid")
+            seaborn.set_context("paper")
+            axs[i] = seaborn.violinplot(data=df, inner="box", palette=paletteList[i])
+            axs[i].set_title(sample, fontsize=40)
+            axs[i].set_xticklabels(labels=x_axis_list,fontsize=20,rotation=90)
+            if i == 0:
+                pyplot.yticks(fontsize=20)
+            i+=1
         pyplot.gcf().subplots_adjust(bottom=0.20)
         pyplot.savefig(outputFolder + "/arg" + VIOLIN)
         pyplot.close()

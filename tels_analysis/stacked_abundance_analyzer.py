@@ -35,7 +35,7 @@ class stacked_abundance_analyzer:
             for sample in this.abundance_dict:
                 this.abundance_dict[sample].makeAbundanceRelative(this.initial_source_size[sample], this.genes_length)
         makeAbundanceRelative()
-        fig, axs = pyplot.subplots(3,8, gridspec_kw={'height_ratios': [2,.1,1.5]}, figsize=(40, 20))
+        fig, axs = pyplot.subplots(3,8, gridspec_kw={'height_ratios': [2,.1,1.5]}, figsize=(60, 20))
         fig.suptitle('Relative Abundance & ARG Richness', fontsize=50)
 
         i = 0
@@ -56,6 +56,7 @@ class stacked_abundance_analyzer:
                 axs[0][i].sharey(axs[0][0])
             pyplot.xticks([])
             axs[0][i].set_title(sample, size = 30)
+            axs[0][i].set_anchor('NE')
             if i == 7:
                 axs[0][i].legend()
 
@@ -66,13 +67,15 @@ class stacked_abundance_analyzer:
                 xMatrix.append(classList.index(classDict[arg]))
             xMatrix = numpy.array([xMatrix])
             seaborn.heatmap(xMatrix, ax = axs[1][i], xticklabels=False, yticklabels=False, cbar=False, cmap='gist_rainbow')
+            axs[1][i].set_anchor('NE')
 
             pyplot.sca(axs[2][i])
             labelMatrix = []
             for j in range(0,len(classList)):
                 labelMatrix.append(j)
-            seaborn.heatmap(numpy.array(labelMatrix).reshape(len(labelMatrix),1), ax = axs[2][i], xticklabels=False, cbar=False, cmap='gist_rainbow', linewidths=1)
+            seaborn.heatmap(numpy.array(labelMatrix).reshape(len(labelMatrix),1), ax = axs[2][i], square=True, xticklabels=False, cbar=False, cmap='gist_rainbow', linewidths=1)
             pyplot.yticks(ticks=pyplot.yticks()[0], labels=classList, fontsize=20, rotation = 0)
+            axs[2][i].set_anchor('NE')
             i+=1
 
         pyplot.gcf()
