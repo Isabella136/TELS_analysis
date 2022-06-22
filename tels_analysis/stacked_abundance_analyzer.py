@@ -42,12 +42,13 @@ class stacked_abundance_analyzer:
         for sample in this.abundance_dict:
             pyplot.sca(axs[0][i])
             j = 0
+            colorList = ['lightcoral', 'seagreen', 'deepskyblue', 'gold']
             abundance = this.abundance_dict[sample].getAbundance()
             for legend, dict in abundance.items():
                 if j == 0:
-                    axs[0][i].bar(list(dict.keys()), numpy.array(list(dict.values())), width=1.0, label=legend)
+                    axs[0][i].bar(list(dict.keys()), numpy.array(list(dict.values())), width=1.0, label=legend, color=colorList[j])
                 else:
-                    axs[0][i].bar(list(dict.keys()), numpy.array(list(dict.values())), width=1.0, label=legend, bottom=list(list(abundance.values())[j-1].values()))
+                    axs[0][i].bar(list(dict.keys()), numpy.array(list(dict.values())), width=1.0, label=legend, color=colorList[j], bottom=list(list(abundance.values())[j-1].values()))
                 j += 1
             if i == 0:
                 axs[0][i].set_ylabel('Log Relative Abundance', size = 25)
@@ -66,14 +67,14 @@ class stacked_abundance_analyzer:
             for arg in classDict:
                 xMatrix.append(classList.index(classDict[arg]))
             xMatrix = numpy.array([xMatrix])
-            seaborn.heatmap(xMatrix, ax = axs[1][i], xticklabels=False, yticklabels=False, cbar=False, cmap='gist_rainbow')
+            seaborn.heatmap(xMatrix, ax = axs[1][i], xticklabels=False, yticklabels=False, cbar=False, cmap='Purples')
             axs[1][i].set_anchor('NE')
 
             pyplot.sca(axs[2][i])
             labelMatrix = []
             for j in range(0,len(classList)):
                 labelMatrix.append(j)
-            seaborn.heatmap(numpy.array(labelMatrix).reshape(len(labelMatrix),1), ax = axs[2][i], square=True, xticklabels=False, cbar=False, cmap='gist_rainbow', linewidths=1)
+            seaborn.heatmap(numpy.array(labelMatrix).reshape(len(labelMatrix),1), ax = axs[2][i], square=True, xticklabels=False, cbar=False, cmap='Purples', linewidths=1)
             pyplot.yticks(ticks=pyplot.yticks()[0], labels=classList, fontsize=20, rotation = 0)
             axs[2][i].set_anchor('NE')
             i+=1
