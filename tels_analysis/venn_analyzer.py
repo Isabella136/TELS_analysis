@@ -21,4 +21,4 @@ class venn_analyzer:
     def makeVenn(this, outputFolder, VENN):
         for sample in this.venn_dict:
             this.venn_dict[sample].findFinalCount()
-            this.venn_dict[sample].makeFigure(outputFolder, VENN)
+            this.venn_dict[sample].makeFigure(outputFolder + "/ARG_venn_diagram", VENN)

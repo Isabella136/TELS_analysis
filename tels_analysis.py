@@ -6,6 +6,7 @@ from tels_analysis.statistical_analyzer import statistical_analyzer
 from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
 from tels_analysis.abundance_analyzer import abundance_analyzer
 from tels_analysis.stacked_abundance_analyzer import stacked_abundance_analyzer
+from tels_analysis.venn_analyzer import venn_analyzer
 import sys, getopt, gzip, shutil, os
 
 fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
@@ -125,3 +126,12 @@ if config.getboolean("STEPS", "STACKED"):
 	for fileName in fileList:
 		stackedAnalyzer.findAbsoluteAbundance(fileName)
 	stackedAnalyzer.makeStack(outputFolder, config.get("OUTPUT_EXTENSION", "STACKED"))
+
+if config.getboolean("STEPS", "VENN"):
+	vennAnalyzer = venn_analyzer(config.get("SOURCE_FILE", "ARG_SAM_ANALYSIS_SOURCE_PREFIX"), 
+													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
+													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
+													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"))
+	for fileName in fileList:
+		vennAnalyzer.addToCount(fileName)
+	vennAnalyzer.makeVenn(outputFolder, config.get("OUTPUT_EXTENSION", "VENN"))
