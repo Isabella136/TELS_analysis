@@ -6,8 +6,12 @@ class indiv_stacked_abundance:
         this.relative_abundance = {}
         this.classDict = {}
         this.classList = []
+        this.statsFilepaths = {}
 
-    def addToAbsolute(this, filepath, legend):
+    def addToAbsolute(this, filepath, legend, stats):
+        if legend not in this.statsFilepaths:
+            this.statsFilepaths[legend] = []
+        this.statsFilepaths[legend].append(stats)
         argFile = open(filepath, "r")
         if legend not in this.absolute_abundance:
             this.absolute_abundance[legend] = {}
@@ -21,25 +25,36 @@ class indiv_stacked_abundance:
                         break
                     continue
                 arg_header = arg.split("|")
-                if arg_header[0] not in list(this.absolute_abundance[legend].keys()):
-                    this.absolute_abundance[legend][arg_header[0]] = 0
-                this.absolute_abundance[legend][arg_header[0]] += 1
+                if arg_header[4] not in list(this.absolute_abundance[legend].keys()):
+                    this.absolute_abundance[legend][arg_header[4]] = 0
+                this.absolute_abundance[legend][arg_header[4]] += 1
                 className = arg_header[2]
                 if arg_header[1] != "Drugs":
                     className = arg_header[1] + " resistance"
                 elif className == "betalactams":
                     className = "Betalactams"
-                if arg_header[0] not in this.classDict:
-                    this.classDict[arg_header[0]] = className
+                if arg_header[4] not in this.classDict:
+                    this.classDict[arg_header[4]] = className
                 if className not in this.classList:
                     this.classList.append(className)
     
-    def makeAbundanceRelative(this, file_size, gene_length):
+    def makeAbundanceRelative(this):
+        avgReads = {}
+        for legend, list in this.statsFilepaths.items():
+            for filepath in list:
+                statFile = open(filepath, "r")
+                statFile.readline()
+                readCount = int(statFile.readline().split(',')[1][:-1])
+                if legend not in avgReads:
+                    avgReads[legend] = 0
+                avgReads[legend]+=readCount
+                statFile.close()
+            avgReads[legend] = avgReads[legend]/3
         for legend, dict in this.absolute_abundance.items():
-            for arg, count in dict.items():
+            for group, count in dict.items():
                 if legend not in this.relative_abundance:
                     this.relative_abundance[legend] = {}
-                this.relative_abundance[legend].update({arg:log10((100.0 * float(count))/(float(gene_length[arg]*file_size[legend])))})
+                this.relative_abundance[legend].update({group:log10(count/avgReads[legend]*1000000)})
 
     def getAbundance(this):
         toReturn = {}

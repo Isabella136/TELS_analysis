@@ -119,10 +119,10 @@ if config.getboolean("STEPS", "VIOLIN"):
 if config.getboolean("STEPS", "STACKED"):
 	stackedAnalyzer = stacked_abundance_analyzer(config.get("SOURCE_FILE", "ARG_SAM_ANALYSIS_SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   outputFolder + "/" + config.get("OUTPUT_EXTENSION", "FILE_SIZE"),
+													   config.get("SOURCE_FILE", "SOURCE_PREFIX"),
 													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
 													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"),
-													   config.get("SOURCE_FILE", "MEGARES_FASTA"))
+													   config.get("SOURCE_EXTENSION", "STATS"))
 	for fileName in fileList:
 		stackedAnalyzer.findAbsoluteAbundance(fileName)
 	stackedAnalyzer.makeStack(outputFolder, config.get("OUTPUT_EXTENSION", "STACKED"))
