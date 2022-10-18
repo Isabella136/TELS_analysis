@@ -58,7 +58,7 @@ config.read(configFile)
 if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
 	statisticalAnalyzer = statistical_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "A_TO_MEGARES"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
 													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 													   config.get("SOURCE_EXTENSION", "STATS"))
 	for fileName in fileList:
@@ -94,32 +94,31 @@ if config.getboolean("STEPS", "FILE_SIZE"):
 	fileOfSizes.close()
 
 if config.getboolean("STEPS", "VIOLIN"):
-	abundanceAnalyzer = abundance_analyzer(config.get("SOURCE_FILE", "ARG_SAM_ANALYSIS_SOURCE_PREFIX"), 
+	abundanceAnalyzer = abundance_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
 													   outputFolder + "/" + config.get("OUTPUT_EXTENSION", "FILE_SIZE"),
-													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
-													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"),
+													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 													   config.get("SOURCE_FILE", "MEGARES_FASTA"))
 	for fileName in fileList:
 		abundanceAnalyzer.findAbsoluteAbundance(fileName)
 	abundanceAnalyzer.makeViolinPlot(outputFolder, config.get("OUTPUT_EXTENSION", "VIOLIN"))
 
 if config.getboolean("STEPS", "STACKED"):
-	stackedAnalyzer = stacked_abundance_analyzer(config.get("SOURCE_FILE", "ARG_SAM_ANALYSIS_SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_PREFIX"),
-													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
-													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"),
+	stackedAnalyzer = stacked_abundance_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
+													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
+													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 													   config.get("SOURCE_EXTENSION", "STATS"))
 	for fileName in fileList:
 		stackedAnalyzer.findAbsoluteAbundance(fileName)
 	stackedAnalyzer.makeStack(outputFolder, config.get("OUTPUT_EXTENSION", "STACKED"))
 
 if config.getboolean("STEPS", "VENN"):
-	vennAnalyzer = venn_analyzer(config.get("SOURCE_FILE", "ARG_SAM_ANALYSIS_SOURCE_PREFIX"), 
+	vennAnalyzer = venn_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
-													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
-													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"))
+													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"))
 	for fileName in fileList:
 		vennAnalyzer.addToCount(fileName)
 	vennAnalyzer.makeVenn(outputFolder, config.get("OUTPUT_EXTENSION", "VENN"))

@@ -1,4 +1,5 @@
 from tels_analysis.compos_richness_analysis.indiv_composition import indiv_composition
+import os
 
 class compos_richness_analyzer:
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
@@ -12,7 +13,10 @@ class compos_richness_analyzer:
         this.MGE_list = []
 
     def analyzeFile(this, fileName, outputFolder, INDIV_COMPOS_CHART):
+        
         fileComp = indiv_composition(fileName)
+        if not(os.path.exists(outputFolder)):
+                os.makedirs(outputFolder)
         fileComp.findAllData(this.filePath(fileName, this.amr_reads), this.filePath(fileName, this.mge_reads), outputFolder + "/" + fileName + INDIV_COMPOS_CHART)
         this.compos_richness_list.append(fileComp.getData())
 
@@ -27,6 +31,8 @@ class compos_richness_analyzer:
                 this.MGE_list.append(mge)
 
     def printAnalysis(this, outputFolder, COMPOS_RICHNESS_ANALYSIS):
+        if not(os.path.exists(outputFolder)):
+                os.makedirs(outputFolder)
         analysis = open(outputFolder + "/" + COMPOS_RICHNESS_ANALYSIS, "w")
         analysis.write("Sample,Sequencing platform,ARG composition,ARG Class richness,ARG Mechanism richness,ARG Group richness,MGE composition,MGE Accession richness\n")
         for c_r in this.compos_richness_list:

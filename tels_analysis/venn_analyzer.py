@@ -5,11 +5,11 @@ class venn_analyzer:
 
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
 
-    def __init__(this, ARG_SAM_ANALYSIS_SOURCE_PREFIX, SOURCE_SUFFIX, ARG_SAM_ANALYSIS, MGE_SAM_ANALYSIS):
-        this.source_prefix = ARG_SAM_ANALYSIS_SOURCE_PREFIX
+    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV, SHORT_MGE):
+        this.source_prefix = SOURCE_PREFIX
         this.source_suffix = SOURCE_SUFFIX
-        this.amr_reads = ARG_SAM_ANALYSIS
-        this.mge_reads = MGE_SAM_ANALYSIS
+        this.amr_reads = SHORT_AMR_DIV
+        this.mge_reads = SHORT_MGE
         this.venn_dict = {}
 
     def addToCount(this, fileName):

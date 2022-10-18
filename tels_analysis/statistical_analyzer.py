@@ -1,4 +1,5 @@
 from tels_analysis.statistical_analysis.indiv_stats import indiv_stats
+import os
 
 class statistical_analyzer:
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
@@ -17,6 +18,8 @@ class statistical_analyzer:
         this.statList.append(fileStats.getStats())
 
     def printAnalysis(this, outputFolder, STATISTICAL_ANALYSIS):
+        if not(os.path.exists(outputFolder)):
+            os.makedirs(outputFolder)
         analysis = open(outputFolder + "/" + STATISTICAL_ANALYSIS, "w")
         analysis.write("Sample,Sequencing platform,Raw reads ,De-duplicated reads,Duplication (%),ARG On-target (%),MGE On-target (%)\n")
         for stat in this.statList:

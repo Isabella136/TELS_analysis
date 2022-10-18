@@ -1,8 +1,8 @@
 from tels_analysis.heatmap_analysis.double_heatmap_creator import double_heatmap_creator
 from tels_analysis.heatmap_analysis import megares_analyzer
-from tels_analysis import heatmap_x_axis
+from tels_analysis import x_axis
 from matplotlib import pyplot
-import seaborn, numpy
+import seaborn, numpy, os
 
 class heatmap_analyzer:
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
@@ -39,7 +39,7 @@ class heatmap_analyzer:
                              double_heatmap_creator("Mock", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict))]
         
     def addToMaps(this, fileName):
-        tempTuple = heatmap_x_axis(fileName)
+        tempTuple = x_axis(fileName)
         index = 0
         if tempTuple[0] == "Human":
             index = 1
@@ -112,6 +112,9 @@ class heatmap_analyzer:
             pyplot.sca(axs[4])
             pyplot.xticks(fontsize=20)
             axs[4].set_title("Mock", fontsize=40)
+
+            if not(os.path.exists(OUTPUT_PREFIX)):
+                os.makedirs(OUTPUT_PREFIX)
 
             pyplot.gcf().subplots_adjust(bottom=0.20, left=0.20)
             pyplot.savefig(OUTPUT_PREFIX + "/" + type + HEATMAP)

@@ -1,6 +1,6 @@
 from matplotlib import pyplot
 from matplotlib_venn import venn3, venn2, venn3_circles, venn2_circles
-import numpy
+import numpy, os
 
 class indiv_venn:
     def __init__(this, sample):
@@ -13,18 +13,16 @@ class indiv_venn:
 
     def addToCount(this, filepath, index):
         sampleFile = open(filepath, "r")
+        lineNum = 0
         for line in sampleFile:
-            blank_space = 0
-            gene_header_list = line.split(',')[1:]
-            for gene in gene_header_list:
-                if gene == "":
-                    blank_space += 1
-                    if blank_space == 2: break
-                    continue
-                gene_header = gene.split('|')
-                if gene_header[4] not in this.groupCount:
-                    this.groupCount[gene_header[4]]=[False,False,False,False]
-                this.groupCount[gene_header[4]][index-1] = True
+            lineNum += 1
+            if lineNum < 20:
+                continue
+            line_list = line.split(',')
+            gene_header = line_list[0].split('|')
+            if gene_header[4] not in this.groupCount:
+                this.groupCount[gene_header[4]]=[False,False,False,False]
+            this.groupCount[gene_header[4]][index-1] = True
 
     def findFinalCount(this):
         for geneCount in this.groupCount.values():
@@ -210,5 +208,7 @@ class indiv_venn:
 
 
         pyplot.gcf()
+        if not(os.path.exists(outputFolder)):
+            os.makedirs(outputFolder)
         pyplot.savefig(outputFolder + "/arg_" + this.sample + VENN)
         pyplot.close()

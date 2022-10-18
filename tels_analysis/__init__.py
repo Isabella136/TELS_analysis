@@ -51,7 +51,7 @@ def fileDict(fileName):
     sample = sample + " + bait " + fileName
     return (sample, seqPlatform)
 
-def heatmap_x_axis(fileName):
+def x_axis(fileName):
     sub_table = ""
     x_axis = ""
 

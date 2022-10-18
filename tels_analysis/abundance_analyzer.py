@@ -2,20 +2,20 @@ from tels_analysis.abundance_analysis.indiv_abundance import indiv_abundance
 from tels_analysis import x_axis
 from tels_analysis import getGenesLength
 from matplotlib import pyplot
-import seaborn, pandas
+import seaborn, pandas, os
 
 class abundance_analyzer:
     filePath = lambda this, fileName, extension, prefix : prefix + fileName + this.source_suffix + extension
 
-    def __init__(this, ARG_SAM_ANALYSIS_SOURCE_PREFIX, SOURCE_SUFFIX, fileOfSizesPath, ARG_SAM_ANALYSIS, MGE_SAM_ANALYSIS, MEGARES):
+    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, fileOfSizesPath, SHORT_AMR_DIV, SHORT_MGE, MEGARES):
         this.allFileSizes = {}
         fileOfSizes = open (fileOfSizesPath, "r")
         for line in fileOfSizes:
             this.allFileSizes.update({line.split(',')[0]:line.split(',')[1]})
-        this.source_prefix = ARG_SAM_ANALYSIS_SOURCE_PREFIX
+        this.source_prefix = SOURCE_PREFIX
         this.source_suffix = SOURCE_SUFFIX
-        this.amr_reads = ARG_SAM_ANALYSIS
-        this.mge_reads = MGE_SAM_ANALYSIS
+        this.amr_reads = SHORT_AMR_DIV
+        this.mge_reads = SHORT_MGE
         this.genes_length = getGenesLength(MEGARES)
         this.abundance_dict = {"Bovine":{}, "Human":{}, "Soil":{}, "Mock":{}}
         this.initial_source_size = {"Bovine":{}, "Human":{}, "Soil":{}, "Mock":{}}
@@ -57,6 +57,8 @@ class abundance_analyzer:
             if i == 0:
                 pyplot.yticks(fontsize=20)
             i+=1
+        if not(os.path.exists(outputFolder)):
+            os.makedirs(outputFolder)
         pyplot.gcf().subplots_adjust(bottom=0.20)
         pyplot.savefig(outputFolder + "/arg" + VIOLIN)
         pyplot.close()

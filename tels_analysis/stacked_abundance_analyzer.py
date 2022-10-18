@@ -1,17 +1,16 @@
 from tels_analysis.stacked_abundance_analysis.indiv_stacked_abundance import indiv_stacked_abundance
 from tels_analysis import getSampleGroup
 from matplotlib import pyplot
-import numpy, seaborn
+import numpy, seaborn, os
 
 class stacked_abundance_analyzer:
     filePath = lambda this, prefix, fileName, extension : prefix + fileName + this.source_suffix + extension
 
-    def __init__(this, ARG_SAM_ANALYSIS_SOURCE_PREFIX, SOURCE_SUFFIX, SOURCE_PREFIX, ARG_SAM_ANALYSIS, MGE_SAM_ANALYSIS, STATS):
-        this.arg_source_prefix = ARG_SAM_ANALYSIS_SOURCE_PREFIX
+    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV, SHORT_MGE, STATS):
         this.source_prefix = SOURCE_PREFIX
         this.source_suffix = SOURCE_SUFFIX
-        this.amr_reads = ARG_SAM_ANALYSIS
-        this.mge_reads = MGE_SAM_ANALYSIS
+        this.amr_reads = SHORT_AMR_DIV
+        this.mge_reads = SHORT_MGE
         this.stats = STATS
         this.abundance_dict = {}
 
@@ -19,7 +18,7 @@ class stacked_abundance_analyzer:
         sample, legend = getSampleGroup(fileName)
         if sample not in this.abundance_dict:
             this.abundance_dict[sample] = indiv_stacked_abundance()
-        this.abundance_dict[sample].addToAbsolute(this.filePath(this.arg_source_prefix, fileName, this.amr_reads), legend, this.filePath(this.source_prefix, fileName, this.stats))
+        this.abundance_dict[sample].addToAbsolute(this.filePath(this.source_prefix, fileName, this.amr_reads), legend, this.filePath(this.source_prefix, fileName, this.stats))
     
     def makeStack(this, outputFolder, STACKED):
         def makeAbundanceRelative():
@@ -74,7 +73,8 @@ class stacked_abundance_analyzer:
             pyplot.yticks(ticks=pyplot.yticks()[0], labels=classList, fontsize=20, rotation = 0)
             axs[2][i].set_anchor('NE')
             i+=1
-
+        if not(os.path.exists(outputFolder)):
+            os.makedirs(outputFolder)
         pyplot.gcf()
         pyplot.savefig(outputFolder + "/arg" + STACKED)
         pyplot.close()
