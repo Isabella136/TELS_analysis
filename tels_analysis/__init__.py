@@ -51,7 +51,7 @@ def fileDict(fileName):
     sample = sample + " + bait " + fileName
     return (sample, seqPlatform)
 
-def x_axis(fileName):
+def heatmap_x_axis(fileName):
     sub_table = ""
     x_axis = ""
 
@@ -85,8 +85,7 @@ def x_axis(fileName):
     elif fileName[0] == 'M':
         x_axis = "TELSeq" + x_axis + "+MGE probes"
     else: #fileName[0] == 'N'
-        x_axis = "PacBio" + x_axis
-
+        x_axis = "PacBio"
     return (sub_table,x_axis)
 
 def megares_analyzer(megaresFile):

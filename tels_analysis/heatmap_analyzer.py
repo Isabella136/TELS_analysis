@@ -1,13 +1,13 @@
 from tels_analysis.heatmap_analysis.double_heatmap_creator import double_heatmap_creator
-from tels_analysis import megares_analyzer
-from tels_analysis import x_axis
+from tels_analysis.heatmap_analysis import megares_analyzer
+from tels_analysis import heatmap_x_axis
 from matplotlib import pyplot
 import seaborn, numpy
 
 class heatmap_analyzer:
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
 
-    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, ARG_SAM_ANALYSIS, MGE_SAM_ANALYSIS, MEGARES):
+    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV, SHORT_MGE, MEGARES):
 
         def fromListToDict(mechanismList):
             classDict = {}
@@ -27,8 +27,8 @@ class heatmap_analyzer:
         drug_list, other_list = megares_analyzer(MEGARES)
         this.source_prefix = SOURCE_PREFIX
         this.source_suffix = SOURCE_SUFFIX
-        this.amr_reads = ARG_SAM_ANALYSIS
-        this.mge_reads = MGE_SAM_ANALYSIS
+        this.amr_reads = SHORT_AMR_DIV
+        this.mge_reads = SHORT_MGE
         this.drugClassDict, drugMechDict = fromListToDict(drug_list)
         this.otherClassDict, otherMechDict = fromListToDict(other_list)
         this.drugBool = makeValsBools(drug_list)
@@ -39,7 +39,7 @@ class heatmap_analyzer:
                              double_heatmap_creator("Mock", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict))]
         
     def addToMaps(this, fileName):
-        tempTuple = x_axis(fileName)
+        tempTuple = heatmap_x_axis(fileName)
         index = 0
         if tempTuple[0] == "Human":
             index = 1
@@ -86,7 +86,7 @@ class heatmap_analyzer:
                 labelPos.append((up + down - 1)/2)
                 mechTotal += classDict[cl]
 
-            fig, axs = pyplot.subplots(1,5, gridspec_kw={'width_ratios': [1,8,8,8,8]}, figsize=(40, 25))
+            fig, axs = pyplot.subplots(1,5, gridspec_kw={'width_ratios': [1,7,7,7,7]}, figsize=(40, 25))
             fig.suptitle('ARG - ' + type, fontsize=50)
 
             seaborn.heatmap(numpy.array(labelMatrix).reshape(len(labelMatrix),1), ax = axs[0], xticklabels=False, cbar=False, cmap="viridis", vmin=0, vmax=numpy.max(labelMatrix)+1)

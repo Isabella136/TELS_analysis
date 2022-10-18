@@ -1,4 +1,5 @@
 from tels_analysis import fileDict
+import pysam
 
 class indiv_stats:
     def __init__ (this, fileName):
@@ -36,20 +37,35 @@ class indiv_stats:
             this.duplication = "__"
         else:
             this.duplication = round(100 - ((this.deduplicated_reads/this.raw_reads) * 100), 1)
-    def findARGStats(this, filePath):
-        ARGstatFile = open(filePath, "r")
-        arg_reads = 0
-        for line in ARGstatFile:
-            if line.split(",")[1] != "":
-                arg_reads += 1
-        this.ARG_on_target = round((arg_reads / this.raw_reads) * 100,1)
+    def findARGStats(this, filePath): #now opens SAM file
+        ARGstatFile = open("temp_files/" + this.fileName + "_arg_stats.csv", "w")
+        readDict = {}
+        pysam.sort("-o", "temp_files/temp_sorted_sam_file.sam", filePath)
+        samfile = pysam.AlignmentFile("temp_files/temp_sorted_sam_file.sam", "r")
+        iter = samfile.fetch()
+        for read in iter:
+            arg = read.reference_name
+            readName = read.query_name
+            if arg == None:
+                continue
+            if readDict.get(readName, False) == False:
+                readDict.update({readName:(arg,)})
+            else:
+                readDict[readName] = readDict[readName] + (arg,)
+        samfile.close()
+        for read, argTuple in readDict.items():
+            ARGstatFile.write(read)
+            for arg in argTuple:
+                ARGstatFile.write("," + arg)
+            ARGstatFile.write("\n")
         ARGstatFile.close()
+        #ARGstatFile = open(filePath, "r")
+        #ARGstatFile.readline()
+        #this.ARG_on_target = round((int(ARGstatFile.readline().split(',')[1]) / this.raw_reads) * 100,1)
+        #ARGstatFile.close()
 
     def findMGEStats(this, filePath):
         MGEstatFile = open(filePath, "r")
-        mge_reads = 0
-        for line in MGEstatFile:
-            if line.split(",")[1] != "":
-                mge_reads += 1
-        this.MGE_on_target = round((mge_reads / this.raw_reads) * 100, 1)
+        MGEstatFile.readline()
+        this.MGE_on_target = round((int(MGEstatFile.readline().split(',')[1]) / this.raw_reads) * 100, 1)
         MGEstatFile.close()

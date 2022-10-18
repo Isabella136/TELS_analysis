@@ -1,5 +1,4 @@
 import configparser
-#from tels_analysis.sam_analyzer import sam_analyzer
 #from tels_analysis.colocalization_analyzer import colocalization_analyzer
 from tels_analysis.heatmap_analyzer import heatmap_analyzer
 from tels_analysis.statistical_analyzer import statistical_analyzer
@@ -45,17 +44,6 @@ for opt, arg in options:
 config = configparser.ConfigParser()
 config.read(configFile)
 
-#if config.getboolean("STEPS", "SAM_ANALYSIS"):
-#	for fileName in fileList:
-#		samAnalyzer = sam_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-#							 config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-#							 config.get("SOURCE_EXTENSION", "A_TO_MEGARES"), 
-#							 config.get("SOURCE_EXTENSION", "A_TO_MGES"), 
-#							 config.get("SOURCE_EXTENSION", "A_TO_KEGG"))
-#		samAnalyzer.all_genes_list(outputFolder, config.get("OUTPUT_FILE", "OUTPUT_PREFIX"),
-#							 config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"),
-#							 config.get("OUTPUT_EXTENSION", "SAM_ANALYSIS"))
-
 #if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
 #	for fileName in fileList:
 #		colocalizationAnalyzer = colocalization_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
@@ -70,8 +58,8 @@ config.read(configFile)
 if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
 	statisticalAnalyzer = statistical_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
-													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"),
+													   config.get("SOURCE_EXTENSION", "A_TO_MEGARES"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 													   config.get("SOURCE_EXTENSION", "STATS"))
 	for fileName in fileList:
 		statisticalAnalyzer.analyzeFile(fileName)
@@ -80,8 +68,8 @@ if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
 if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 	crAnalyzer = compos_richness_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
-													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"))
+													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"))
 	for fileName in fileList:
 		crAnalyzer.analyzeFile(fileName, outputFolder + "/ARG_composition", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
 	crAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS"))
@@ -89,8 +77,8 @@ if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 if config.getboolean("STEPS", "HEATMAP"):
 	heatmapAnalyzer = heatmap_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "ARG_SAM_ANALYSIS"), 
-													   config.get("SOURCE_EXTENSION", "MGE_SAM_ANALYSIS"),
+													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 													   config.get("SOURCE_FILE", "MEGARES"))
 	for fileName in fileList:
 		heatmapAnalyzer.addToMaps(fileName)
