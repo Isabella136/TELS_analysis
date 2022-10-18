@@ -44,7 +44,6 @@ class indiv_composition:
             if lineNum < 20:
                 continue
             arg_header = line.split(',')[0].split('|')
-            if len(arg_header) == 6: continue
             if arg_header[1] == "Drugs":
                 this.arg_composition_data[0] += 1
             elif arg_header[1] == "Metals":

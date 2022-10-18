@@ -1,10 +1,8 @@
 from tels_analysis import fileDict
-import pysam
 
 class indiv_stats:
     def __init__ (this, fileName):
         this.sample, this.seqPlatform = fileDict(fileName)
-        this.fileName = fileName
         this.raw_reads = 0
         this.deduplicated_reads = 0
         this.duplication = 0
@@ -37,32 +35,11 @@ class indiv_stats:
             this.duplication = "__"
         else:
             this.duplication = round(100 - ((this.deduplicated_reads/this.raw_reads) * 100), 1)
-    def findARGStats(this, filePath): #now opens SAM file
-        ARGstatFile = open("temp_files/" + this.fileName + "_arg_stats.csv", "w")
-        readDict = {}
-        pysam.sort("-o", "temp_files/temp_sorted_sam_file.sam", filePath)
-        samfile = pysam.AlignmentFile("temp_files/temp_sorted_sam_file.sam", "r")
-        iter = samfile.fetch()
-        for read in iter:
-            arg = read.reference_name
-            readName = read.query_name
-            if arg == None:
-                continue
-            if readDict.get(readName, False) == False:
-                readDict.update({readName:(arg,)})
-            else:
-                readDict[readName] = readDict[readName] + (arg,)
-        samfile.close()
-        for read, argTuple in readDict.items():
-            ARGstatFile.write(read)
-            for arg in argTuple:
-                ARGstatFile.write("," + arg)
-            ARGstatFile.write("\n")
+    def findARGStats(this, filePath):
+        ARGstatFile = open(filePath, "r")
+        ARGstatFile.readline()
+        this.ARG_on_target = round((int(ARGstatFile.readline().split(',')[1]) / this.raw_reads) * 100,1)
         ARGstatFile.close()
-        #ARGstatFile = open(filePath, "r")
-        #ARGstatFile.readline()
-        #this.ARG_on_target = round((int(ARGstatFile.readline().split(',')[1]) / this.raw_reads) * 100,1)
-        #ARGstatFile.close()
 
     def findMGEStats(this, filePath):
         MGEstatFile = open(filePath, "r")
