@@ -1,4 +1,5 @@
 from tels_analysis.compos_richness_analysis.indiv_composition import indiv_composition
+from tels_analysis import mgeDict
 import os
 
 class compos_richness_analyzer:
@@ -9,15 +10,17 @@ class compos_richness_analyzer:
         this.source_suffix = SOURCE_SUFFIX
         this.amr_reads = SHORT_AMR_DIV
         this.mge_reads = SHORT_MGE
+        this.mge_dict = mgeDict(MGE_CLASSIFICATION)
         this.compos_richness_list = []
         this.MGE_list = []
 
-    def analyzeFile(this, fileName, outputFolder, INDIV_COMPOS_CHART):
-        
-        fileComp = indiv_composition(fileName)
-        if not(os.path.exists(outputFolder)):
-                os.makedirs(outputFolder)
-        fileComp.findAllData(this.filePath(fileName, this.amr_reads), this.filePath(fileName, this.mge_reads), outputFolder + "/" + fileName + INDIV_COMPOS_CHART)
+    def analyzeFile(this, fileName, argOutputFolder, mgeOutputFolder, INDIV_COMPOS_CHART):
+        fileComp = indiv_composition(fileName, this.mge_dict)
+        if not(os.path.exists(argOutputFolder)):
+            os.makedirs(argOutputFolder)
+        if not(os.path.exists(mgeOutputFolder)):
+            os.makedirs(mgeOutputFolder)
+        fileComp.findAllData(this.filePath(fileName, this.amr_reads), this.filePath(fileName, this.mge_reads), argOutputFolder + "/" + fileName + INDIV_COMPOS_CHART, mgeOutputFolder + "/" + fileName + INDIV_COMPOS_CHART)
         this.compos_richness_list.append(fileComp.getData())
 
         mge_file = open(this.filePath(fileName, this.mge_reads), "r")

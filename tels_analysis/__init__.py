@@ -212,3 +212,11 @@ def getSampleAndIndex(fileName):
     else: #fileName[0] == 'N'
         index = 4
     return (sub_table,index)
+
+def mgeDict(filePath):
+    mgeDict = {}
+    mgeFile = open(filePath, "r")
+    for line in mgeFile:
+        mgeDict[line.split(",")[0]] = line.split(",")[1][:-1]
+    mgeFile.close()
+    return mgeDict

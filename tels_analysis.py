@@ -69,9 +69,10 @@ if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 	crAnalyzer = compos_richness_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
 													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
 													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_MGE"))
+													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
+													   config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
 	for fileName in fileList:
-		crAnalyzer.analyzeFile(fileName, outputFolder + "/ARG_composition", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
+		crAnalyzer.analyzeFile(fileName, outputFolder + "/ARG_composition", outputFolder + "/MGE_composition", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
 	crAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS"))
 
 if config.getboolean("STEPS", "HEATMAP"):

@@ -5,15 +5,16 @@ import numpy
 
 
 class indiv_composition:
-    def __init__(this, fileName):
+    def __init__(this, fileName, mge_dict):
         this.name = fileName
         this.sample, this.seqPlatform = fileDict(fileName)
         this.arg_composition_data = [0,0,0,0] #in order: drug, metal, multi-compound, and biocide
         this.arg_class_richness = 0
         this.arg_mechanism_richness = 0
         this.arg_group_richness = 0
-        this.mge_composition_data = [0,0,0,0,0,0] #in order: plasmid, phage, TE, IS, ICE, virus
+        this.mge_composition_data = [0,0,0,0,0,0] #in order: PLASMID, PHAGE, TE, IS, ICE, VIRUS
         this.mge_richness = 0
+        this.mge_dict = mge_dict
 
     def getData(this):
         toReturn = this.sample
@@ -24,14 +25,10 @@ class indiv_composition:
         toReturn = toReturn + ',,' + str(this.mge_richness)
         return toReturn
 
-    def findAllData(this, filepath_ARG_composition, filepath_MGE, filepath_output):
+    def findAllData(this, filepath_ARG_composition, filepath_MGE, filepath_arg_output, filepath_mge_output):
         this.findARGComposition(filepath_ARG_composition)
         this.findMGEComposition(filepath_MGE)
-        if this.arg_class_richness == 0:
-            img = Image.new(mode = "RGB", size = (120, 48), color = (255, 255, 255))
-            img.save(filepath_output)
-        else:
-            this.makePieChart(filepath_output)
+        this.makePieChart(filepath_arg_output, filepath_mge_output)
 
     def findARGComposition(this, filepath):
         arg_composition_file = open(filepath, "r")
@@ -73,12 +70,45 @@ class indiv_composition:
             else:
                 this.mge_richness = int(line.split(',')[1][:-1])
                 break
+            mge = line.split(',')[0]
+            if this.mge_dict[mge] == "AMR":
+                continue
+            if mgeList.count(mge) == 0:
+                mgeList.append(mge)
+            if this.mge_dict[mge] == "PLASMID":
+                this.mge_composition_data[0] += 1
+            elif this.mge_dict[mge] == "PROPHAGE":
+                this.mge_composition_data[1] += 1
+            elif this.mge_dict[mge] == "TE":
+                this.mge_composition_data[2] += 1
+            elif this.mge_dict[mge] == "IS":
+                this.mge_composition_data[3] += 1
+            elif this.mge_dict[mge] == "ICE":
+                this.mge_composition_data[4] += 1
+            elif this.mge_dict[mge] == "VIRUS":
+                this.mge_composition_data[5] += 1
+        this.mge_richness = len(mgeList)
         mge_composition_file.close()
 
-    def makePieChart(this, filepath):
-        vals = numpy.array(this.arg_composition_data)
-        chartColors = ["#5891AD", "#004561", "#FF6F31", "#1C7685"]
-        pyplot.figure(figsize=(120,48))
-        pyplot.pie(vals, colors=chartColors, startangle=90)
-        pyplot.savefig(filepath, dpi=10)
-        pyplot.close()
+    def makePieChart(this, filepath_arg_output, filepath_mge_output):
+        if this.arg_class_richness == 0:
+            img = Image.new(mode = "RGB", size = (120, 48), color = (255, 255, 255))
+            img.save(filepath_arg_output)
+        else:
+            vals = numpy.array(this.arg_composition_data)
+            chartColors = ["#5891AD", "#004561", "#FF6F31", "#1C7685"]
+            pyplot.figure(figsize=(120,48))
+            pyplot.pie(vals, colors=chartColors, startangle=90)
+            pyplot.savefig(filepath_arg_output, dpi=10)
+            pyplot.close()
+
+        if this.mge_richness == 0:
+            img = Image.new(mode = "RGB", size = (120, 48), color = (255, 255, 255))
+            img.save(filepath_mge_output)
+        else:
+            vals = numpy.array(this.mge_composition_data)
+            chartColors = ["#34A853", "#FBBC04", "#FF6D01", "#EA4335", "#4285F4", "#46BDC6"]
+            pyplot.figure(figsize=(120,48))
+            pyplot.pie(vals, colors=chartColors, startangle=90)
+            pyplot.savefig(filepath_mge_output, dpi=10)
+            pyplot.close()
