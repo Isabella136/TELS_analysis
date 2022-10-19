@@ -80,50 +80,54 @@ class indiv_venn:
         c = venn3_circles(subsets=(data['1'], data['2'], data['12'], data['3'], data['13'], data['23'], data['123']), linestyle="solid", linewidth=.5, color='black')
         if this.sample == "Bovine+XT":
             v.get_label_by_id('001').set_text('')
-            pyplot.annotate(data['3'], xy=v.get_label_by_id('001').get_position(), xytext=(-0.05, -0.515), ha='center', fontsize=15)
+            pyplot.annotate(data['3'], xy=v.get_label_by_id('001').get_position(), xytext=(-0.36, -0.53), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('101').set_text('')
-            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position(), xytext=(-0.3, -0.55), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position(), xytext=(-0.38, -0.28), ha='center', fontsize=15)
+            v.get_label_by_id('110').set_text('')
+            pyplot.annotate(data['12'], xy=v.get_label_by_id('110').get_position(), xytext=(-0.17, 0.1), ha='center', fontsize=15)
             v.get_label_by_id('011').set_text('')
-            pyplot.annotate(data['23'], xy=v.get_label_by_id('011').get_position(), xytext=(0.25, -0.55), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['23'], xy=v.get_label_by_id('011').get_position() - numpy.array([.05,.02]), xytext=(-0.22, -0.55), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('111').set_text('')
-            pyplot.annotate(data['123'], xy=v.get_label_by_id('111').get_position(), xytext=(-0.05, -0.2), ha='center', fontsize=15)
+            pyplot.annotate(data['123'], xy=v.get_label_by_id('111').get_position(), xytext=(-0.22, -0.22), ha='center', fontsize=15)
         elif this.sample == "Human+V2":
             v.get_label_by_id('101').set_text('')
-            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position(), xytext=(-0.4, -0.36), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position() - numpy.array([0,.02]), xytext=(-0.47, -0.36), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            v.get_label_by_id('111').set_text('')
+            pyplot.annotate(data['123'], xy=v.get_label_by_id('111').get_position(), xytext=(-0.25, -0.12), ha='center', fontsize=15)
+            v.get_label_by_id('011').set_text('')
+            pyplot.annotate(data['23'], xy=v.get_label_by_id('011').get_position(), xytext=(-0.13, -0.27), ha='center', fontsize=15)
         elif this.sample == "Human+XT":
-            v.get_label_by_id('010').set_text('')
-            pyplot.annotate(data['2'], xy=v.get_label_by_id('010').get_position(), xytext=(.6, .04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('101').set_text('')
-            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position(), xytext=(-.15, -.35), ha='center', fontsize=15)
+            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position(), xytext=(.16, -.36), ha='center', fontsize=15)
+            v.get_label_by_id('100').set_text('')
+            pyplot.annotate(data['1'], xy=v.get_label_by_id('100').get_position(), xytext=(-.35, 0), ha='center', fontsize=15)
+            v.get_label_by_id('110').set_text('')
+            pyplot.annotate(data['12'], xy=v.get_label_by_id('110').get_position(), xytext=(.16, .15), ha='center', fontsize=15)
         elif this.sample == "Mock+V2":
-            v.get_label_by_id('101').set_text('')
-            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position(), xytext=(-0.65, -.02), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            v.get_label_by_id('111').set_text('')
+            pyplot.annotate(data['123'], xy=v.get_label_by_id('111').get_position(), xytext=(-0.475, -0.015), ha='center', fontsize=15)
             v.get_label_by_id('001').set_text('')
-            pyplot.annotate(data['3'], xy=v.get_label_by_id('001').get_position() - numpy.array([.01,.01]), xytext=(-0.45, -0.5), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['3'], xy=v.get_label_by_id('001').get_position(), xytext=(-0.45, -0.5), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('010').set_text('')
-            pyplot.annotate(data['2'], xy=v.get_label_by_id('010').get_position() + numpy.array([.01,.01]), xytext=(0.52, 0.42), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['2'], xy=v.get_label_by_id('010').get_position() + numpy.array([.015,.01]), xytext=(0.52, 0.47), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('011').set_text('')
             pyplot.annotate(data['23'], xy=v.get_label_by_id('011').get_position(), xytext=(0, 0), ha='center', fontsize=15)
         elif this.sample == "Mock+XT":
             v.get_label_by_id('100').set_text('')
-            pyplot.annotate(data['1'], xy=v.get_label_by_id('100').get_position() - numpy.array([.07,0]), xytext=(-0.7, .02), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['1'], xy=v.get_label_by_id('100').get_position() - numpy.array([.05,0]), xytext=(-0.65, 0), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('110').set_text('')
-            pyplot.annotate(data['12'], xy=v.get_label_by_id('110').get_position(), xytext=(0, 0.48), ha='center', fontsize=15)
-            v.get_label_by_id('101').set_text('')
-            pyplot.annotate(data['13'], xy=v.get_label_by_id('101').get_position(), xytext=(-0.4, -0.5), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
-            v.get_label_by_id('001').set_text('')
-            pyplot.annotate(data['3'], xy=v.get_label_by_id('001').get_position(), xytext=(-0.15, -0.65), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['12'], xy=v.get_label_by_id('110').get_position(), xytext=(-.05, 0.5), ha='center', fontsize=15)
             v.get_label_by_id('010').set_text('')
-            pyplot.annotate(data['2'], xy=v.get_label_by_id('010').get_position() + numpy.array([.1,0]), xytext=(0.7, 0.02), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
-            v.get_label_by_id('011').set_text('')
-            pyplot.annotate(data['23'], xy=v.get_label_by_id('011').get_position(), xytext=(0.35, -0.6), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['2'], xy=v.get_label_by_id('010').get_position() + numpy.array([.075,0]), xytext=(0.65, 0.01), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('111').set_text('')
             pyplot.annotate(data['123'], xy=v.get_label_by_id('111').get_position(), xytext=(0, 0), ha='center', fontsize=15)
         elif this.sample == "Soil+V2":
             v.get_label_by_id('111').set_text('')
-            pyplot.annotate(data['123'], xy=v.get_label_by_id('111').get_position(), xytext=(-0.2, 0.25), ha='center', fontsize=15)
+            pyplot.annotate(data['123'], xy=v.get_label_by_id('111').get_position(), xytext=(-0.16, 0.35), ha='center', fontsize=15)
             v.get_label_by_id('011').set_text('')
-            pyplot.annotate(data['23'], xy=v.get_label_by_id('011').get_position(), xytext=(0.1, 0.1), ha='center', fontsize=15)
+            pyplot.annotate(data['23'], xy=v.get_label_by_id('011').get_position(), xytext=(0.05, 0.25), ha='center', fontsize=15)
+            v.get_label_by_id('010').set_text('')
+            pyplot.annotate(data['2'], xy=v.get_label_by_id('010').get_position(), xytext=(0.05, 0.5), ha='center', fontsize=15)
 
 
 
@@ -137,26 +141,29 @@ class indiv_venn:
         c = venn2_circles(subsets=(data['1'], data['4'], data['14']), linestyle="solid", linewidth=.5, color='black')
         if this.sample == "Bovine+XT":
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.77, -0.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+        elif this.sample == "Human+V2":
+            v.get_label_by_id('10').set_text('')
+            pyplot.annotate(data['1'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.78, -0.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Human+XT":
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position() - numpy.array([.01,0]), xytext=(0.75, -0.06), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Mock+V2":
             v.get_label_by_id('10').set_text('')
-            pyplot.annotate(data['1'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('11').set_text('')
-            pyplot.annotate(data['14'], xy=v.get_label_by_id('11').get_position(), xytext=(-0.75, -0.3), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['14'], xy=v.get_label_by_id('11').get_position() - numpy.array([.03,0]), xytext=(-0.77, -.05), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Mock+XT":
             v.get_label_by_id('10').set_text('')
-            pyplot.annotate(data['1'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.85, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['1'], xy=v.get_label_by_id('10').get_position() + numpy.array([.01,0]), xytext=(-0.8, -0.06), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position() - numpy.array([.01,0]), xytext=(0.75, -0.06), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Soil+V2":
             v.get_label_by_id('10').set_text('')
-            pyplot.annotate(data['1'], xy=v.get_label_by_id('10').get_position(), xytext=(-1.5, -0.08), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            v.get_label_by_id('11').set_text('')
+            pyplot.annotate(data['14'], xy=v.get_label_by_id('11').get_position() - numpy.array([.05,0]), xytext=(-0.76, -.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Soil+XT":
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position() + numpy.array([.025,0]), xytext=(0.8, -0.06), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
 
 
 
@@ -169,24 +176,18 @@ class indiv_venn:
         c = venn2_circles(subsets=(data['2'], data['4'], data['24']), linestyle="solid", linewidth=.5, color='black')
         if this.sample == "Bovine+XT":
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
-        elif this.sample == "Human+XT":
-            v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.85, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.06), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Mock+V2":
             v.get_label_by_id('10').set_text('')
-            pyplot.annotate(data['2'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.85, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['2'], xy=v.get_label_by_id('10').get_position() + numpy.array([.03,0]), xytext=(-0.85, -0.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.05), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position() - numpy.array([.03,0]), xytext=(0.8, -0.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Mock+XT":
             v.get_label_by_id('10').set_text('')
-            pyplot.annotate(data['2'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.85, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['2'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.81, -0.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
-        elif this.sample == "Soil+XT":
-            v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position() + numpy.array([0.05,0]), xytext=(0.9, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
-
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.75, -0.06), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+        
 
         pyplot.sca(axs['lr'])
         data = makeVenn2('3')
@@ -197,14 +198,16 @@ class indiv_venn:
         c = venn2_circles(subsets=(data['3'], data['4'], data['34']), linestyle="solid", linewidth=.5, color='black')
         if this.sample == "Mock+V2":
             v.get_label_by_id('10').set_text('')
-            pyplot.annotate(data['3'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.85, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.8, -0.05), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.82, -0.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
         elif this.sample == "Mock+XT":
             v.get_label_by_id('10').set_text('')
-            pyplot.annotate(data['3'], xy=v.get_label_by_id('10').get_position(), xytext=(-0.8, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['3'], xy=v.get_label_by_id('10').get_position() + numpy.array([.01,0]), xytext=(-0.75, -0.055), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
             v.get_label_by_id('01').set_text('')
-            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position(), xytext=(0.85, -0.04), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+            pyplot.annotate(data['4'], xy=v.get_label_by_id('01').get_position() + numpy.array([.01,0]), xytext=(0.81, -0.057), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
+        elif this.sample == "Soil+V2":
+            v.get_label_by_id('11').set_text('')
+            pyplot.annotate(data['34'], xy=v.get_label_by_id('11').get_position() + numpy.array([.03,.23]), xytext=(.3, .5), ha='center', fontsize=15, arrowprops=dict(arrowstyle='-', color='black'))
 
 
         pyplot.gcf()

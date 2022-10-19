@@ -63,13 +63,11 @@ class indiv_composition:
     def findMGEComposition(this, filepath):
         mge_composition_file = open(filepath)
         lineNum = 0
+        mgeList = []
         for line in mge_composition_file:
             lineNum += 1
-            if lineNum < 19:
+            if lineNum <= 20:
                 continue
-            else:
-                this.mge_richness = int(line.split(',')[1][:-1])
-                break
             mge = line.split(',')[0]
             if this.mge_dict[mge] == "AMR":
                 continue

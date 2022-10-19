@@ -5,7 +5,7 @@ import os
 class compos_richness_analyzer:
     filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
 
-    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV, SHORT_MGE):
+    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV, SHORT_MGE, MGE_CLASSIFICATION):
         this.source_prefix = SOURCE_PREFIX
         this.source_suffix = SOURCE_SUFFIX
         this.amr_reads = SHORT_AMR_DIV
