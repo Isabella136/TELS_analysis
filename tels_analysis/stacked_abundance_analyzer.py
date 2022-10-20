@@ -27,7 +27,6 @@ class stacked_abundance_analyzer:
         makeAbundanceRelative()
         fig, axs = pyplot.subplots(3,8, gridspec_kw={'height_ratios': [2,.1,1.5]}, figsize=(60, 20))
         fig.suptitle('Relative Abundance & ARG Richness', fontsize=50)
-
         i = 0
         for sample in this.abundance_dict:
             pyplot.sca(axs[0][i])
@@ -40,6 +39,7 @@ class stacked_abundance_analyzer:
                 if j == 0:
                     axs[0][i].bar(list(dict.keys()), current_array, width=1.0, label=legend, color=colorList[j])
                     bottom_array = current_array
+                    axs.sort
                 else:
                     axs[0][i].bar(list(dict.keys()), current_array, width=1.0, label=legend, color=colorList[j], bottom=bottom_array)
                     bottom_array = bottom_array + current_array
@@ -73,6 +73,7 @@ class stacked_abundance_analyzer:
             pyplot.yticks(ticks=pyplot.yticks()[0], labels=classList, fontsize=20, rotation = 0)
             axs[2][i].set_anchor('NE')
             i+=1
+
         if not(os.path.exists(outputFolder)):
             os.makedirs(outputFolder)
         pyplot.gcf()

@@ -30,6 +30,8 @@ class indiv_stacked_abundance:
                 className = arg_header[1] + " resistance"
             elif className == "betalactams":
                 className = "Betalactams"
+            elif className == "Mycobacterium_tuberculosis-specific_Drug":
+                className = "M_tuberculosis-specific_Drug"
             if arg_header[4] not in this.classDict:
                 this.classDict[arg_header[4]] = className
             if className not in this.classList:
@@ -47,11 +49,38 @@ class indiv_stacked_abundance:
                 avgReads[legend]+=readCount
                 statFile.close()
             avgReads[legend] = avgReads[legend]/3
+        total = {}
+        tempRelative = {}
         for legend, dict in this.absolute_abundance.items():
             for group, count in dict.items():
+                if legend not in tempRelative:
+                    tempRelative[legend] = {}
+                tempRelative[legend].update({group:log10(count/avgReads[legend]*1000000)})
+                if group not in total:
+                    total[group] = 0
+                total[group] += tempRelative[legend][group]
+        sortedTotal = {}
+        while len(total) > 0:
+            max = ('key', -1)
+            for key,val in total.items():
+                if val > max[1]:
+                    max = (key,val)
+            sortedTotal.update({max[0]:max[1]})
+            total.pop(max[0])
+        classDictTemp = this.classDict
+        this.classDict = {}
+        for key in sortedTotal:
+            this.classDict[key] = classDictTemp[key]
+            for legend in tempRelative:
                 if legend not in this.relative_abundance:
                     this.relative_abundance[legend] = {}
-                this.relative_abundance[legend].update({group:log10(count/avgReads[legend]*1000000)})
+                if key not in tempRelative[legend]:
+                    this.relative_abundance[legend].update({key:0})
+                else:
+                    this.relative_abundance[legend].update({key:tempRelative[legend][key]})
+        classDictTemp.clear()
+        sortedTotal.clear()
+        
 
     def getAbundance(this):
         toReturn = {}
