@@ -26,23 +26,21 @@ class indiv_stats:
 
     def findReadStats(this, filePath):
         statFile = open(filePath, "r")
-        statFile.readline()
-        this.raw_reads = int(statFile.readline().split(',')[1])
         this.deduplicated_reads = int(statFile.readline().split(',')[1])
         statFile.close()
-        if this.deduplicated_reads == 0:
-            this.deduplicated_reads = "__"
+        if this.raw_reads == 0:
+            this.raw_reads = "__"
             this.duplication = "__"
         else:
             this.duplication = round(100 - ((this.deduplicated_reads/this.raw_reads) * 100), 1)
     def findARGStats(this, filePath):
         ARGstatFile = open(filePath, "r")
         ARGstatFile.readline()
-        this.ARG_on_target = round((int(ARGstatFile.readline().split(',')[1]) / this.raw_reads) * 100,1)
+        this.ARG_on_target = round((int(ARGstatFile.readline().split(',')[1]) / this.deduplicated_reads) * 100,1)
         ARGstatFile.close()
 
     def findMGEStats(this, filePath):
         MGEstatFile = open(filePath, "r")
         MGEstatFile.readline()
-        this.MGE_on_target = round((int(MGEstatFile.readline().split(',')[1]) / this.raw_reads) * 100, 1)
+        this.MGE_on_target = round((int(MGEstatFile.readline().split(',')[1]) / this.deduplicated_reads) * 100, 1)
         MGEstatFile.close()

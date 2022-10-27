@@ -26,29 +26,23 @@ def fileDict(fileName):
 
     #Determine probes
     if fileName[0:2] == "AM":
-        sample = sample + " + ARG-MGE probes"
+        sample = sample + " + ARG-MGE probe"
         seqPlatform = "TELSeq"
         fileName = fileName[2:]
     elif fileName[0] == 'A':
-        sample = sample + " + ARG probes"
+        sample = sample + " + ARG probe"
         seqPlatform = "TELSeq"
         fileName = fileName[1:]
     elif fileName[0] == 'M':
-        sample = sample + " + MGE probes"
+        sample = sample + " + MGE probe"
         seqPlatform = "TELSeq"
         fileName = fileName[1:]
     else: #fileName[0] == 'N'
         seqPlatform = "PacBio"
-        if fileName[-1] == 'A':
-            sample = sample + " + ARG probes + no baits"
-        elif fileName[-2] == 'A':
-            sample = sample + " + ARG-MGE probes + no baits"
-        else: #fileName[-1] == 'M'
-            sample = sample + " + MGE probes + no baits"
         return (sample, seqPlatform)
 
     #Determine baits
-    sample = sample + " + bait " + fileName
+    sample = sample + fileName
     return (sample, seqPlatform)
 
 def x_axis(fileName):

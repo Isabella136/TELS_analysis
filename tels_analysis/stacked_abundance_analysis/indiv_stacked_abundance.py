@@ -42,8 +42,7 @@ class indiv_stacked_abundance:
         for legend, list in this.statsFilepaths.items():
             for filepath in list:
                 statFile = open(filepath, "r")
-                statFile.readline()
-                readCount = int(statFile.readline().split(',')[1][:-1])
+                readCount = int(statFile.readline().split(',')[1])
                 if legend not in avgReads:
                     avgReads[legend] = 0
                 avgReads[legend]+=readCount

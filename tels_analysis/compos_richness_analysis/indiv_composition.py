@@ -69,6 +69,9 @@ class indiv_composition:
             if lineNum <= 20:
                 continue
             mge = line.split(',')[0]
+            if mge not in this.mge_dict:
+                print(mge)
+                continue
             if this.mge_dict[mge] == "AMR":
                 continue
             if mgeList.count(mge) == 0:
