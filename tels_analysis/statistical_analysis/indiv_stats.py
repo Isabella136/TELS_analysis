@@ -26,6 +26,7 @@ class indiv_stats:
 
     def findReadStats(this, filePath):
         statFile = open(filePath, "r")
+        this.raw_reads = int(statFile.readline().split(',')[1])
         this.deduplicated_reads = int(statFile.readline().split(',')[1])
         statFile.close()
         if this.raw_reads == 0:

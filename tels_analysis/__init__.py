@@ -210,7 +210,11 @@ def getSampleAndIndex(fileName):
 def mgeDict(filePath):
     mgeDict = {}
     mgeFile = open(filePath, "r")
+    i = 0
     for line in mgeFile:
+        i += 1
+        if i == 1:
+            continue
         mgeDict[line.split(",")[0]] = line.split(",")[1][:-1]
     mgeFile.close()
     return mgeDict
