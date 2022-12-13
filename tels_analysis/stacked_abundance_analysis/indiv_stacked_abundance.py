@@ -51,9 +51,9 @@ class indiv_stacked_abundance:
         total = {}
         tempRelative = {}
         for legend, dict in this.absolute_abundance.items():
+            if legend not in tempRelative:
+                tempRelative[legend] = {}
             for group, count in dict.items():
-                if legend not in tempRelative:
-                    tempRelative[legend] = {}
                 tempRelative[legend].update({group:log10(count/avgReads[legend]*1000000)})
                 if group not in total:
                     total[group] = 0

@@ -6,6 +6,7 @@ from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
 from tels_analysis.abundance_analyzer import abundance_analyzer
 from tels_analysis.stacked_abundance_analyzer import stacked_abundance_analyzer
 from tels_analysis.venn_analyzer import venn_analyzer
+from tels_analysis.special import special
 import sys, getopt, gzip, shutil, os
 
 fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
@@ -54,6 +55,16 @@ config.read(configFile)
 #									  config.get("OUTPUT_FILE", "OUTPUT_PREFIX"), 
 #									  config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"), 
 #									  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
+
+if config.getboolean("STEPS", "SPECIAL"):
+	thresholdDifference = special(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
+									config.get("SOURCE_FILE", "SPECIAL_PREFIX"),
+									config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
+									config.get("SOURCE_EXTENSION", "SHORT_MGE"),
+									config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
+	for fileName in fileList:
+		thresholdDifference.addToMobilomeInfo(fileName)
+	thresholdDifference.writeMobilomeInfo(outputFolder + "/mobilome_info.csv")
 
 if config.getboolean("STEPS", "STATS"):
 	for fileName in fileList:
