@@ -58,7 +58,7 @@ config.read(configFile)
 
 if config.getboolean("STEPS", "SPECIAL"):
 	thresholdDifference = special(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
-									config.get("SOURCE_FILE", "SPECIAL_PREFIX"),
+									"AlignedToMegares.csv",
 									config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
 									config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 									config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
