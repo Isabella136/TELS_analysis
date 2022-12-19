@@ -45,6 +45,9 @@ for opt, arg in options:
 config = configparser.ConfigParser()
 config.read(configFile)
 
+if not os.path.exists(outputFolder + "/"):
+	os.makedirs(outputFolder + "/")
+
 #if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
 #	for fileName in fileList:
 #		colocalizationAnalyzer = colocalization_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 

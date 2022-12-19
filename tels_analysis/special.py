@@ -1,8 +1,7 @@
-from re import M
 from tels_analysis import mgeDict
 
 class special:
-    filename = lambda this, fileName, : this.source_prefix + fileName + this.source_suffix + this.extension
+    filename = lambda this, fileName : this.source_prefix + fileName + this.source_suffix + this.extension
 
     def __init__(this, SOURCE_PREFIX, MGEAlignedToMegares, SOURCE_SUFFIX, SHORT_MGE, MGE_CLASSIFICATION):
         this.source_prefix = SOURCE_PREFIX
