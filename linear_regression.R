@@ -20,6 +20,7 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
               Unique_Coloc = integer(sample_count),
               XTvsV2 = integer(sample_count),
               SampleType = integer(sample_count),
+              Probe = integer(sample_count),
               Read_Count = integer(sample_count),
               ARG = integer(sample_count),
               MGE = integer(sample_count),
@@ -83,6 +84,14 @@ for (i in 1:sample_count) {
   df$Aligned[i] <- mobilome_info[283, i+1]
 }
 
+fit_tels <- lm(data=df, Unique_Coloc ~ Probe * SampleType)
+summary(fit_tels) # model summary
+coefficients(fit_tels) # model coefficients
+fitted(fit_tels) # predicted values
+residuals(fit_tels) # model residuals
+anova(fit_tels) # anova table, this is typically what we report
+plot(fit_tels)
+
 fit_tels_arg <- lm(data=df, Unique_Coloc ~ as.numeric(ARG))
 summary(fit_tels_arg) # model summary
 coefficients(fit_tels_arg) # model coefficients
@@ -113,7 +122,7 @@ for (i in 1:130001) {
 plot(as.numeric(df$MGE), df$Unique_Coloc, main = "MGE Linear Regression", xlab = "MGE count", ylab = "Unique Colocalization")
 lines(y_mge, type="l")
 
-fit_tels_arg_mge <- lm(data=df, Unique_Coloc ~ as.numeric(ARG) + as.numeric(MGE))
+fit_tels_arg_mge <- lm(data=df, Unique_Coloc ~ as.numeric(ARG) * as.numeric(MGE))
 summary(fit_tels_arg_mge) # model summary
 coefficients(fit_tels_arg_mge) # model coefficients
 fitted(fit_tels_arg_mge) # predicted values
@@ -143,11 +152,11 @@ residuals(fit_tels_arg_classifiedaligned) # model residuals
 anova(fit_tels_arg_classifiedaligned) # anova table, this is typically what we report
 plot(fit_tels_arg_classifiedaligned)
 
-z_arg_ca = integer(81)
-x_arg_ca = 0:80
-y_arg_ca = seq(0, 120000, by=1500)
-for (i in 1:81) {
-  z_arg_ca[i] = fit_tels_arg_classifiedalignedarg$coefficients[1] + y_arg_ca[i] * fit_tels_arg_classifiedalignedarg$coefficients[2] + x_arg_ca[i] * fit_tels_arg_classifiedalignedarg$coefficients[3]
+z_arg_ca = integer(41)
+x_arg_ca = 0:40
+y_arg_ca = seq(0, 120000, by=3000)
+for (i in 1:41) {
+  z_arg_ca[i] = fit_tels_arg_classifiedaligned$coefficients[1] + y_arg_ca[i] * fit_tels_arg_classifiedaligned$coefficients[2] + x_arg_ca[i] * fit_tels_arg_classifiedaligned$coefficients[3]
 }
 plot3d(x=as.numeric(df$Classified_Aligned), y=as.numeric(df$ARG), z=df$Unique_Coloc,
        main = "ARG vs MGE Classified as and Aligned to ARG Linear Regression", 

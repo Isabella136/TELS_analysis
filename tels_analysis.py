@@ -7,6 +7,7 @@ from tels_analysis.abundance_analyzer import abundance_analyzer
 from tels_analysis.stacked_abundance_analyzer import stacked_abundance_analyzer
 from tels_analysis.venn_analyzer import venn_analyzer
 from tels_analysis.special import special
+from tels_analysis.special_coloc import special_coloc
 import sys, getopt, gzip, shutil, os
 
 fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
@@ -60,14 +61,20 @@ if not os.path.exists(outputFolder + "/"):
 #									  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
 
 if config.getboolean("STEPS", "SPECIAL"):
-	thresholdDifference = special(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
+	mgeInfo = special(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
 									"AlignedToMegares.csv",
 									config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
 									config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 									config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
+	colocInfo = special_coloc(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
+									"AlignedToMegares.csv",
+									config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
+									config.get("SOURCE_EXTENSION", "COLOCALIZATIONS_RICHNESS"))
 	for fileName in fileList:
-		thresholdDifference.addToMobilomeInfo(fileName)
-	thresholdDifference.writeMobilomeInfo(outputFolder + "/mobilome_info.csv")
+		mgeInfo.addToMobilomeInfo(fileName)
+		colocInfo.addColocInfo(fileName)
+	mgeInfo.writeMobilomeInfo(outputFolder + "/mobilome_info.csv")
+	colocInfo.writeColocInfo(outputFolder + "/coloc_info.csv")
 
 if config.getboolean("STEPS", "STATS"):
 	for fileName in fileList:
