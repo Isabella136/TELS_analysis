@@ -90,7 +90,7 @@ coefficients(fit_tels) # model coefficients
 fitted(fit_tels) # predicted values
 residuals(fit_tels) # model residuals
 anova(fit_tels) # anova table, this is typically what we report
-plot(fit_tels)
+#plot(fit_tels)
 
 fit_tels_arg <- lm(data=df, Unique_Coloc ~ as.numeric(ARG))
 summary(fit_tels_arg) # model summary
@@ -98,7 +98,7 @@ coefficients(fit_tels_arg) # model coefficients
 fitted(fit_tels_arg) # predicted values
 residuals(fit_tels_arg) # model residuals
 anova(fit_tels_arg) # anova table, this is typically what we report
-plot(fit_tels_arg)
+#plot(fit_tels_arg)
 
 y_arg = integer(120001)
 for (i in 1:120001) {
@@ -113,7 +113,7 @@ coefficients(fit_tels_mge) # model coefficients
 fitted(fit_tels_mge) # predicted values
 residuals(fit_tels_mge) # model residuals
 anova(fit_tels_mge) # anova table, this is typically what we report
-plot(fit_tels_mge)
+#plot(fit_tels_mge)
 
 y_mge = integer(130001)
 for (i in 1:130001) {
@@ -128,7 +128,7 @@ coefficients(fit_tels_arg_mge) # model coefficients
 fitted(fit_tels_arg_mge) # predicted values
 residuals(fit_tels_arg_mge) # model residuals
 anova(fit_tels_arg_mge) # anova table, this is typically what we report
-plot(fit_tels_arg_mge)
+#plot(fit_tels_arg_mge)
 
 z_arg_mge = integer(10001)
 x_arg_mge = seq(0, 130000, by=13)
@@ -150,7 +150,7 @@ coefficients(fit_tels_arg_classifiedaligned) # model coefficients
 fitted(fit_tels_arg_classifiedaligned) # predicted values
 residuals(fit_tels_arg_classifiedaligned) # model residuals
 anova(fit_tels_arg_classifiedaligned) # anova table, this is typically what we report
-plot(fit_tels_arg_classifiedaligned)
+#plot(fit_tels_arg_classifiedaligned)
 
 z_arg_ca = integer(41)
 x_arg_ca = 0:40
@@ -172,7 +172,7 @@ coefficients(fit_tels_classifiedaligned) # model coefficients
 fitted(fit_tels_classifiedaligned) # predicted values
 residuals(fit_tels_classifiedaligned) # model residuals
 anova(fit_tels_classifiedaligned) # anova table, this is typically what we report
-plot(fit_tels_classifiedaligned)
+#plot(fit_tels_classifiedaligned)
 
 y_ca = integer(81)
 for (i in 1:81) {
@@ -181,3 +181,17 @@ for (i in 1:81) {
 plot(as.numeric(df$Classified_Aligned), df$Unique_Coloc, main = "MGE Classified as and Aligned to ARG Linear Regression", xlab = "MGE count", ylab = "Unique Colocalization")
 lines(y_ca, type="l")
 
+fit_tels_arg_to_ca <- lm(data=df, Classified_Aligned ~ as.numeric(ARG))
+summary(fit_tels_arg_to_ca) # model summary
+coefficients(fit_tels_arg_to_ca) # model coefficients
+fitted(fit_tels_arg_to_ca) # predicted values
+residuals(fit_tels_arg_to_ca) # model residuals
+anova(fit_tels_arg_to_ca) # anova table, this is typically what we report
+#plot(fit_tels_arg_to_ca)
+
+y_arg_to_ca = integer(120001)
+for (i in 1:120001) {
+  y_arg_to_ca[i] = fit_tels_arg_to_ca$coefficients[1] + (i-1) * fit_tels_arg_to_ca$coefficients[2]
+}
+plot(as.numeric(df$ARG), df$Classified_Aligned, main = "ARG Linear Regression", xlab = "ARG count", ylab = "MGE count")
+lines(y_arg_to_ca, type="l")
