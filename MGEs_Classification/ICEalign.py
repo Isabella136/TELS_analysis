@@ -7,7 +7,7 @@ from ICEtree import ICEtree
 iceberg_lock = threading.Lock()
 
 iceberg = {}
-iceberg_db = open('iceberg_db.fasta', 'r')
+iceberg_db = open('FASTA/iceberg_db.fasta', 'r')
 header = ''
 for line in iceberg_db:
     if line[0] == '>':
@@ -96,3 +96,4 @@ for ice in similarities:
     output_similarities.write('\n')
 output_similarities.close()
 
+tree = ICEtree.ICEtree(similarities)

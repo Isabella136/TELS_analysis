@@ -11,3 +11,6 @@ MGEs_Classification/megares_mge_alignment/*
 MGEs_Classification/ICEalignMatrix.csv
 MGEs_Classification/ICEalignSimilarities.csv
 MGEs_Classification/temp.csv
+MGEs_Classification/FASTA/aclame_db.fasta
+MGEs_Classification/FASTA/plasmid_finder_db.fasta
+MGEs_Classification/FASTA/iceberg_db.fasta
