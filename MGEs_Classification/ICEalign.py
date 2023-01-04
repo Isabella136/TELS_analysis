@@ -85,8 +85,12 @@ for (row, rowNum) in zip(arr, range((len(iceberg)))):
             continue
         if cell == None:
             continue
-        if (int(cell)/base) >= .5:
-            similarities[iceberg_header[rowNum]].append(iceberg_header[cellNum])
+        if (base < int(arr[cellNum][cellNum+1])):
+            if (int(cell)/base) >= .5:
+                similarities[iceberg_header[rowNum]].append(iceberg_header[cellNum])
+        else:
+            if (int(cell)/int(arr[cellNum][cellNum+1])) >= .5:
+                similarities[iceberg_header[rowNum]].append(iceberg_header[cellNum])
 
 output_similarities = open('ICEalignSimilarities.csv', 'w')
 for ice in similarities:
