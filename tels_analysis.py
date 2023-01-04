@@ -74,6 +74,8 @@ if config.getboolean("STEPS", "SPECIAL"):
 		mgeInfo.addToMobilomeInfo(fileName)
 		colocInfo.addColocInfo(fileName)
 	mgeInfo.writeMobilomeInfo(outputFolder + "/mobilome_info.csv")
+	mgeInfo.addComparisonInfo()
+	mgeInfo.writeComparisonMobilomeInfo(outputFolder + "/comparison_mobilome_info.csv")
 	colocInfo.writeColocInfo(outputFolder + "/coloc_info.csv")
 
 if config.getboolean("STEPS", "STATS"):

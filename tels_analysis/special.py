@@ -1,4 +1,5 @@
 from tels_analysis import mgeDict
+import itertools
 
 class special:
     filename = lambda this, fileName : this.source_prefix + fileName + this.source_suffix + this.extension
@@ -22,6 +23,115 @@ class special:
         this.classified_aligned_arg = {}
         this.aligned_arg = {}
         this.richness = {}
+        this.old_classified_arg = {}
+        this.old_classified_aligned_arg = {}
+        this.old_richness = {}
+
+    def writeComparisonMobilomeInfo(this, output):
+        file = open(output, "w")
+        for sample in this.sample_list:
+            file.write("," + sample + ",")
+        file.write("\n")
+        for sample in this.sample_list:
+            file.write(",new,old")
+        file.write("\n")
+        both = []
+        for mge, info in this.classified_arg.items():
+            file.write(mge)
+            for sample in this.sample_list:
+                if sample not in info:
+                    file.write(",0")
+                else:
+                    file.write("," + str(info[sample]))
+                if mge in this.old_classified_arg:
+                    both.append(mge)
+                    if sample in this.old_classified_arg[mge]:
+                        file.write("," + str(this.old_classified_arg[mge][sample]))
+                    else:
+                        file.write(",0")
+                else:
+                    file.write(",0")
+            file.write("\n")
+        for mge, info in this.old_classified_arg.items():
+            if mge in both:
+                continue
+            file.write(mge)
+            for sample in this.sample_list:
+                file.write(",0")
+                if sample not in info:
+                    file.write(",0")
+                else:
+                    file.write("," + str(info[sample]))
+            file.write("\n")
+        file.write("RICHNESS:")
+        for sample in this.richness:
+            file.write("," + str(this.richness[sample]["classified_arg"]) + "," + str(this.old_richness[sample]["classified_arg"]))
+        file.write("\n")
+        file.write("\n")
+        both.clear()
+        for mge, info in this.classified_aligned_arg.items():
+            file.write(mge)
+            for sample in this.sample_list:
+                if sample not in info:
+                    file.write(",0")
+                else:
+                    file.write("," + str(info[sample]))
+                if mge in this.old_classified_aligned_arg:
+                    both.append(mge)
+                    if sample in this.old_classified_aligned_arg[mge]:
+                        file.write("," + str(this.old_classified_aligned_arg[mge][sample]))
+                    else:
+                        file.write(",0")
+                else:
+                    file.write(",0")
+            file.write("\n")
+        for mge, info in this.old_classified_aligned_arg.items():
+            if mge in both:
+                continue
+            file.write(mge)
+            for sample in this.sample_list:
+                file.write(",0")
+                if sample not in info:
+                    file.write(",0")
+                else:
+                    file.write("," + str(info[sample]))
+            file.write("\n")
+        file.write("RICHNESS:")
+        for sample in this.richness:
+            file.write("," + str(this.richness[sample]["classified_aligned_arg"]) + "," + str(this.old_richness[sample]["classified_aligned_arg"]))
+        file.close()
+
+    def addComparisonInfo(this):
+        file = open("MGEs_Classification/TELS2 thershold comparison/mobilome_info_edited.csv", "r")
+        for sample in this.sample_list:
+            this.old_richness.update({sample:{"classified_arg":0,"classified_aligned_arg":0}})
+        sample = []
+        for (line, lineNum) in zip(file, range(107)):
+            if lineNum == 1:
+                continue
+            split_line = line.split(',')
+            if lineNum == 0:
+                for index in range(54):
+                    sample.append(split_line[index*2+1])
+                    this.old_richness.update({split_line[index*2+1]:{"classified_arg":0,"classified_aligned_arg":0}})
+                continue
+            if split_line[0] not in this.mge_aligned_to_megares:
+                if split_line[0] not in this.old_classified_arg:
+                    this.old_classified_arg.update({split_line[0]:dict()})
+                for index in range(54):
+                    this.old_classified_arg[split_line[0]].update({sample[index]:split_line[index*2+1]})
+                    if split_line[index*2+1] != '0':
+                        this.old_richness[sample[index]]["classified_arg"] += 1
+            else:
+                if split_line[0] not in this.old_classified_aligned_arg:
+                    this.old_classified_aligned_arg.update({split_line[0]:dict()})
+                    this.old_classified_arg.update({split_line[0]:dict()})
+                for index in range(54):
+                    this.old_classified_aligned_arg[split_line[0]].update({sample[index]:split_line[index*2+1]})
+                    this.old_classified_arg[split_line[0]].update({sample[index]:split_line[index*2+1]})
+                    if split_line[index*2+1] != '0':
+                        this.old_richness[sample[index]]["classified_aligned_arg"] += 1
+                        this.old_richness[sample[index]]["classified_arg"] += 1
 
     def writeMobilomeInfo(this, output):
         file = open(output, "w")
