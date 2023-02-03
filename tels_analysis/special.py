@@ -2,9 +2,9 @@ from tels_analysis import mgeDict
 import itertools
 
 class special:
-    filename = lambda this, fileName : this.source_prefix + fileName + this.source_suffix + this.extension
+    filename = lambda this, fileName, index : this.source_prefix + fileName + this.source_suffix + this.extension[index]
 
-    def __init__(this, SOURCE_PREFIX, MGEAlignedToMegares, SOURCE_SUFFIX, SHORT_MGE, MGE_CLASSIFICATION):
+    def __init__(this, SOURCE_PREFIX, MGEAlignedToMegares, SOURCE_SUFFIX, SHORT_MGE, OVERLAP_OUTPUT, MGE_CLASSIFICATION):
         this.source_prefix = SOURCE_PREFIX
         this.mge_aligned_to_megares = []
         file = open(MGEAlignedToMegares, "r")
@@ -16,16 +16,63 @@ class special:
                 this.mge_aligned_to_megares.append(mge2)
         file.close()
         this.source_suffix = SOURCE_SUFFIX
-        this.extension = SHORT_MGE
+        this.extension = [SHORT_MGE, OVERLAP_OUTPUT]
         this.mge_dict = mgeDict(MGE_CLASSIFICATION)
         this.sample_list = []
         this.classified_arg = {}
         this.classified_aligned_arg = {}
+        this.aligned_args_in_overlap = {}
+        this.classified_args_in_overlap = {}
+        this.classified_aligned_args_in_overlap = {}
         this.aligned_arg = {}
         this.richness = {}
         this.old_classified_arg = {}
         this.old_classified_aligned_arg = {}
         this.old_richness = {}
+        this.new_mges = []
+
+    def findInOverlapOutput(this, output):
+        for sample in this.sample_list:
+            with open(this.filename(sample, 1), "r") as file:
+                for mge in file:
+                    if mge[:-1] in list(this.aligned_arg.keys()):
+                        if mge[:-1] not in list(this.aligned_args_in_overlap.keys()):
+                            this.aligned_args_in_overlap[mge[:-1]] = list()
+                        this.aligned_args_in_overlap[mge[:-1]].append(sample)
+                    if mge[:-1] in list(this.classified_arg.keys()):
+                        if mge[:-1] not in list(this.classified_args_in_overlap.keys()):
+                            this.classified_args_in_overlap[mge[:-1]] = list()
+                        this.classified_args_in_overlap[mge[:-1]].append(sample)
+                    if mge[:-1] in list(this.classified_aligned_arg.keys()):
+                        if mge[:-1] not in list(this.classified_aligned_args_in_overlap.keys()):
+                            this.classified_aligned_args_in_overlap[mge[:-1]] = list()
+                        this.classified_aligned_args_in_overlap[mge[:-1]].append(sample)
+        with open(output, "w") as file:
+            for sample in this.sample_list:
+                file.write(',' + sample)
+            for mge in this.classified_args_in_overlap:
+                file.write('\n' + mge)
+                for sample in this.sample_list:
+                    if sample not in this.classified_args_in_overlap[mge]:
+                        file.write(',')
+                    else:
+                        file.write(',Y')
+            file.write('\n')
+            for mge in this.classified_aligned_args_in_overlap:
+                file.write('\n' + mge)
+                for sample in this.sample_list:
+                    if sample not in this.classified_aligned_args_in_overlap[mge]:
+                        file.write(',')
+                    else:
+                        file.write(',Y')
+            file.write('\n')
+            for mge in this.aligned_args_in_overlap:
+                file.write('\n' + mge)
+                for sample in this.sample_list:
+                    if sample not in this.aligned_args_in_overlap[mge]:
+                        file.write(',')
+                    else:
+                        file.write(',Y')
 
     def writeComparisonMobilomeInfo(this, output):
         file = open(output, "w")
@@ -102,7 +149,7 @@ class special:
         file.close()
 
     def addComparisonInfo(this):
-        file = open("MGEs_Classification/TELS2 thershold comparison/mobilome_info_edited.csv", "r")
+        file = open("MGEs_Classification/TELS2_thershold_comparison/mobilome_info_edited.csv", "r")
         for sample in this.sample_list:
             this.old_richness.update({sample:{"classified_arg":0,"classified_aligned_arg":0}})
         sample = []
@@ -176,11 +223,12 @@ class special:
         for sample in this.richness:
             file.write("," + str(this.richness[sample]["aligned_arg"]))
         file.close()
+        print(this.new_mges)
 
     def addToMobilomeInfo(this, sample):
         this.richness.update({sample: {"classified_arg": 0, "classified_aligned_arg": 0, "aligned_arg": 0}})
         this.sample_list.append(sample)
-        file = open(this.filename(sample), "r")
+        file = open(this.filename(sample, 0), "r")
         i = 0
         for line in file:
             i += 1
@@ -188,7 +236,9 @@ class special:
                 continue
             mge = line.split(',')[0]
             count = line.split(',')[1][:-1]
-            annot = this.mge_dict[mge]
+            if (mge not in this.mge_dict) and (mge not in this.new_mges):
+                this.new_mges.append(mge)
+            annot = "UNKNOWN" if mge not in this.mge_dict else this.mge_dict[mge]
             if annot == "AMR":
                 if mge not in this.mge_aligned_to_megares:
                     if mge not in this.classified_arg:

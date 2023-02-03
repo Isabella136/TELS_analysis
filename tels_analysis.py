@@ -1,4 +1,5 @@
 import configparser
+import multiprocessing
 #from tels_analysis.colocalization_analyzer import colocalization_analyzer
 from tels_analysis.heatmap_analyzer import heatmap_analyzer
 from tels_analysis.statistical_analyzer import statistical_analyzer
@@ -65,6 +66,7 @@ if config.getboolean("STEPS", "SPECIAL"):
 									"AlignedToMegares.csv",
 									config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
 									config.get("SOURCE_EXTENSION", "SHORT_MGE"),
+									config.get("SOURCE_EXTENSION", "OVERLAP_OUTPUT"),
 									config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
 	colocInfo = special_coloc(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
 									"AlignedToMegares.csv",
@@ -76,19 +78,23 @@ if config.getboolean("STEPS", "SPECIAL"):
 	mgeInfo.writeMobilomeInfo(outputFolder + "/mobilome_info.csv")
 	mgeInfo.addComparisonInfo()
 	mgeInfo.writeComparisonMobilomeInfo(outputFolder + "/comparison_mobilome_info.csv")
+	mgeInfo.findInOverlapOutput(outputFolder + "/comparison_with_other_samples.csv")
 	colocInfo.writeColocInfo(outputFolder + "/coloc_info.csv")
 
 if config.getboolean("STEPS", "STATS"):
-	for fileName in fileList:
-		statsFileOutput = config.get("SOURCE_FILE", "SOURCE_PREFIX") + fileName + config.get("SOURCE_FILE", "SOURCE_SUFFIX") + config.get("OUTPUT_EXTENSION", "STATS")
+	SOURCE_PREFIX = config.get("SOURCE_FILE", "SOURCE_PREFIX")
+	SOURCE_SUFFIX = config.get("SOURCE_FILE", "SOURCE_SUFFIX")
+	STATS_EXTENSION = config.get("OUTPUT_EXTENSION", "STATS")
+	def calculateStats(fileName):
+		statsFileOutput = SOURCE_PREFIX + fileName + SOURCE_SUFFIX + STATS_EXTENSION
 		if not(os.path.exists(statsFileOutput)):
-			readListSource = config.get("SOURCE_FILE", "SOURCE_PREFIX") + fileName + config.get("SOURCE_FILE", "SOURCE_SUFFIX")
+			readListSource = SOURCE_PREFIX + fileName + SOURCE_SUFFIX
 			inputFile = open(readListSource, "r")
 			lineNum = 0
 			for line in inputFile:
 				lineNum += 1
 			inputFile.close()
-			readListSource = config.get("SOURCE_FILE", "SOURCE_PREFIX") + fileName + ".ccs.fastq"
+			readListSource = SOURCE_PREFIX + fileName + ".ccs.fastq"
 			dupFile = open(readListSource, "r")
 			dupLineNum = 0
 			for line in dupFile:
@@ -99,6 +105,14 @@ if config.getboolean("STEPS", "STATS"):
 			outputFile.write("\n")
 			outputFile.write("DEDUPLICATED_STATS_NUM_OF_READS," + str(int(lineNum/4)))
 			outputFile.close()
+	process = []
+	for fileName in fileList:
+		process.append(multiprocessing.Process(target=calculateStats, args=(fileName,)))
+	for i in range(0, 96, 8):
+		for t in process[i:i+8]:
+			t.start()
+		for t in process[i:i+8]:
+			t.join()
 
 if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
 	statisticalAnalyzer = statistical_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
@@ -133,10 +147,7 @@ if config.getboolean("STEPS", "HEATMAP"):
 if config.getboolean("STEPS", "FILE_SIZE"):
 	fileOfSizes = open(outputFolder + "/" + config.get("OUTPUT_EXTENSION", "FILE_SIZE"), "w")
 	for fileName in fileList:
-		with gzip.open(config.get("SOURCE_FILE", "INITIAL_SOURCE_PREFIX") + fileName + config.get("SOURCE_FILE", "SOURCE_SUFFIX"), "rb") as input:
-			with open ("temp_files/deduplicated_sequel-demultiplex.temp.ccs.fastq", "wb") as output:
-				shutil.copyfileobj(input, output)
-		fileOfSizes.write(fileName + "," + str(os.stat("temp_files/deduplicated_sequel-demultiplex.temp.ccs.fastq").st_size) + ",\n")
+		fileOfSizes.write(fileName + "," + str(os.stat(config.get("SOURCE_FILE", "SOURCE_PREFIX") + fileName + config.get("SOURCE_FILE", "SOURCE_SUFFIX")).st_size) + ",\n")
 	fileOfSizes.close()
 
 if config.getboolean("STEPS", "VIOLIN"):

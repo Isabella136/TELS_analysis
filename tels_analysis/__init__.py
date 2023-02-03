@@ -215,6 +215,6 @@ def mgeDict(filePath):
         i += 1
         if i == 1:
             continue
-        mgeDict[line.split(",")[0]] = line.split(",")[1][:-1]
+        mgeDict[line.split(",")[0]] = line.split(",")[1]
     mgeFile.close()
     return mgeDict
