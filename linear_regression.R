@@ -4,8 +4,12 @@ if (!require("rjson")) {
 if (!require("rgl")) {
   install.packages("rgl")
 }
+if (!require("nlme")) {
+  install.packages(("nlme"))
+}
 library(rjson)
 library(rgl)
+library(nlme)
 
 #Creating data frame of results
 sample_count = 96
@@ -17,22 +21,26 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
                         "MOXTAA","MOXTAB","MOXTAC","MOXTAMA","MOXTAMB","MOXTAMC","MOXTMA","MOXTMB","MOXTMC","MOXTNEGA",'MOXTNEGAM',"MOXTNEGM",
                         "SV2AA","SV2AB","SV2AC","SV2AMA","SV2AMB","SV2AMC","SV2MA","SV2MB","SV2MC","SV2NEGA","SV2NEGAM","SV2NEGM",
                         "SXTAA","SXTAB","SXTAC","SXTAMA","SXTAMB","SXTAMC","SXTMA","SXTMB","SXTMC","SXTNEGA","SXTNEGAM","SXTNEGM"),
-              Unique_Coloc = integer(sample_count),
               XTvsV2 = integer(sample_count),
               SampleType = integer(sample_count),
               Probe = integer(sample_count),
               Read_Count = integer(sample_count),
+              Avg_Read_Length = integer(sample_count),
+              MEGARes_Length = integer(sample_count),
+              MGE_Length = integer(sample_count),
+              MEGARes_Seq_Depth = integer(sample_count),
+              MGE_Seq_Depth = integer(sample_count),
+              Unique_Coloc = integer(sample_count),
               ARG = integer(sample_count),
               MGE = integer(sample_count),
               LogARG = integer(sample_count),
               LogMGE = integer(sample_count),
-              Read_Length = integer(sample_count),
-              Classified = integer(sample_count),
-              Classified_Aligned = integer(sample_count),
-              Aligned = integer(sample_count))
+              SampleID = integer(sample_count))
+              
 
 #Filling data frame
-mobilome_info <- read.csv("~/Documents/GitHub/TELS_analysis/output/mobilome_info.csv")
+ref_length <- read.csv(
+  "~/Documents/GitHub/TELS_analysis/output/references_length.csv", header=FALSE)
 for (i in 1:sample_count) {
   if ((i-1)%%24 > 11) df$XTvsV2[i] <- 'XT'
   else  df$XTvsV2[i] <- 'V2'
@@ -46,6 +54,12 @@ for (i in 1:sample_count) {
   else if ((i-1)%%12 < 6) df$Probe[i] <- 'ARG-MGE'
   else if ((i-1)%%12 < 9) df$Probe[i] <- 'MGE'
   else df$Probe[i] <- 'None'
+  
+  if ((i-1)%%3 == 0) df$SampleID[i] <- 'A'
+  else if ((i-1)%%3 == 1) df$SampleID[i] <- 'B'
+  else df$SampleID[i] <- 'C'
+  
+
   
   colocalizations_richness <- read.csv(
     paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
@@ -77,12 +91,18 @@ for (i in 1:sample_count) {
   df$MGE[i] <- mge$Statistics[1]
   df$LogARG[i] <- log2(1+as.numeric(arg$Statistics[1]))
   df$LogMGE[i] <- log2(1+as.numeric(mge$Statistics[1]))
-  df$Read_Length[i] <- sum(unlist(readlength))/stats$V2[2]
+  df$Avg_Read_Length[i] <- sum(unlist(readlength))/stats$V2[2]
   df$Unique_Coloc[i] = colocalizations_richness$V2[1]
-  df$Classified[i] <- mobilome_info[105, i+1]
-  df$Classified_Aligned[i] <- mobilome_info[151, i+1]
-  df$Aligned[i] <- mobilome_info[283, i+1]
+  df$MEGARes_Length[i] <- ref_length$V2[ref_length$V1 == "Megares"]
+  df$MGE_Length[i] <- ref_length$V2[ref_length$V1 == df$Samples[i]]
+  df$MEGARes_Seq_Depth[i] <- (df$Read_Count[i] * df$Avg_Read_Length[i])/df$MEGARes_Length[i]
+  df$MGE_Seq_Depth[i] <- (df$Read_Count[i] * df$Avg_Read_Length[i])/df$MGE_Length[i]
 }
+
+fit_tels <- lme(Unique_Coloc ~ Probe * SampleType * XTvsV2 * as.numeric(MEGARes_Seq_Depth),
+                random=~Probe | SampleID,
+                data=df,
+                method='ML')
 
 fit_tels <- lm(data=df, Unique_Coloc ~ Probe * SampleType)
 summary(fit_tels) # model summary

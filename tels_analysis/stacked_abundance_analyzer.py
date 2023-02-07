@@ -31,17 +31,17 @@ class stacked_abundance_analyzer:
         for sample in this.abundance_dict:
             pyplot.sca(axs[0][i])
             j = 0
-            colorList = ['lightcoral', 'seagreen', 'deepskyblue', 'gold']
+            colorList = ['red', 'forestgreen', 'royalblue', 'gold']
             abundance = this.abundance_dict[sample].getAbundance()
             bottom_array = None
             for legend, dict in abundance.items():
                 current_array = numpy.array(list(dict.values()))
                 if j == 0:
-                    axs[0][i].bar(list(dict.keys()), current_array, width=1.0, label=legend, color=colorList[j])
+                    axs[0][i].bar(list(dict.keys()), current_array, width=1.0, label=legend, color=colorList[j], alpha = 0.5)
                     bottom_array = current_array
                     axs.sort
                 else:
-                    axs[0][i].bar(list(dict.keys()), current_array, width=1.0, label=legend, color=colorList[j], bottom=bottom_array)
+                    axs[0][i].bar(list(dict.keys()), current_array, width=1.0, label=legend, color=colorList[j], alpha = 0.5, bottom=bottom_array)
                     bottom_array = bottom_array + current_array
                 j += 1
             if i == 0:

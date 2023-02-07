@@ -12,7 +12,7 @@ class indiv_composition:
         this.arg_class_richness = 0
         this.arg_mechanism_richness = 0
         this.arg_group_richness = 0
-        this.mge_composition_data = [0,0,0,0,0,0,0,0] #in order: PLASMID, PHAGE, TE, IS, ICE, VIRUS, UNCLASSIFIED
+        this.mge_composition_data = [0,0,0,0,0,0,0] #in order: PLASMID, PHAGE, TE, IS, ICE, VIRUS, UNCLASSIFIED
         this.mge_richness = 0
         this.mge_dict = mge_dict
 
@@ -88,8 +88,6 @@ class indiv_composition:
                 this.mge_composition_data[5] += 1
             elif this.mge_dict[mge] == "UNCLASSIFIED":
                 this.mge_composition_data[6] += 1
-            else:
-                this.mge_composition_data[7] += 1
         this.mge_richness = len(mgeList)
         mge_composition_file.close()
 
@@ -110,7 +108,7 @@ class indiv_composition:
             img.save(filepath_mge_output)
         else:
             vals = numpy.array(this.mge_composition_data)
-            chartColors = ["#34A853", "#FBBC04", "#FF6D01", "#EA4335", "#4285F4", "#46BDC6", "#FFC0CB", "#A020F0"]
+            chartColors = ["#34A853", "#FBBC04", "#FF6D01", "#EA4335", "#4285F4", "#46BDC6", "#FFC0CB"]
             pyplot.figure(figsize=(120,48))
             pyplot.pie(vals, colors=chartColors, startangle=90)
             pyplot.savefig(filepath_mge_output, dpi=10)

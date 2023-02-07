@@ -9,6 +9,7 @@ from tels_analysis.stacked_abundance_analyzer import stacked_abundance_analyzer
 from tels_analysis.venn_analyzer import venn_analyzer
 from tels_analysis.special import special
 from tels_analysis.special_coloc import special_coloc
+from tels_analysis.linear_regression import megares_full_reference_length, mge_full_reference_length
 import sys, getopt, gzip, shutil, os
 
 fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
@@ -49,6 +50,24 @@ config.read(configFile)
 
 if not os.path.exists(outputFolder + "/"):
 	os.makedirs(outputFolder + "/")
+
+megares_full_reference_length(config['SOURCE_FILE']['MEGARES_FASTA'], outputFolder + "/references_length.csv")
+mge_lock = multiprocessing.Lock()
+mp = list()
+for sample_name in fileList:
+	mp.append(multiprocessing.Process(target=mge_full_reference_length, args=(sample_name, 
+																			  config['SOURCE_FILE']['SOURCE_PREFIX'],
+																			  config['SOURCE_FILE']['SOURCE_SUFFIX'],
+																			  config['SOURCE_EXTENSION']['OVERLAP_OUTPUT'],
+																			  config['SOURCE_FILE']['ACLAME_FASTA'],
+																			  config['SOURCE_FILE']['ICEBERG_FASTA'],
+																			  config['SOURCE_FILE']['PLASMID_FINDER_FASTA'],
+																			  outputFolder + "/references_length.csv",
+																			  mge_lock)))
+for process in mp:
+	process.start()
+for process in mp:
+	process.join()
 
 #if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
 #	for fileName in fileList:
