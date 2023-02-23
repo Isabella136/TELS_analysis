@@ -5,11 +5,24 @@ if (!require("rgl")) {
   install.packages("rgl")
 }
 if (!require("nlme")) {
-  install.packages(("nlme"))
+  install.packages("nlme")
 }
+if (!require("lme4")) {
+  install.packages("lme4")
+}
+if (!require("RLRsim")) {
+  install.packages("RLRsim")
+}
+if (!require("MuMIn")) {
+  install.packages('MuMIn')
+}
+
 library(rjson)
 library(rgl)
 library(nlme)
+library(lme4)
+library(RLRsim)
+library(MuMIn)
 
 #Creating data frame of results
 sample_count = 96
@@ -21,45 +34,48 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
                         "MOXTAA","MOXTAB","MOXTAC","MOXTAMA","MOXTAMB","MOXTAMC","MOXTMA","MOXTMB","MOXTMC","MOXTNEGA",'MOXTNEGAM',"MOXTNEGM",
                         "SV2AA","SV2AB","SV2AC","SV2AMA","SV2AMB","SV2AMC","SV2MA","SV2MB","SV2MC","SV2NEGA","SV2NEGAM","SV2NEGM",
                         "SXTAA","SXTAB","SXTAC","SXTAMA","SXTAMB","SXTAMC","SXTMA","SXTMB","SXTMC","SXTNEGA","SXTNEGAM","SXTNEGM"),
-              XTvsV2 = integer(sample_count),
+              Chemistry = integer(sample_count),
               SampleType = integer(sample_count),
               Probe = integer(sample_count),
               Read_Count = integer(sample_count),
-              Avg_Read_Length = integer(sample_count),
-              MEGARes_Length = integer(sample_count),
-              MGE_Length = integer(sample_count),
-              MEGARes_Seq_Depth = integer(sample_count),
-              MGE_Seq_Depth = integer(sample_count),
+              Total_Read_Length = integer(sample_count),
               Unique_Coloc = integer(sample_count),
               ARG = integer(sample_count),
               MGE = integer(sample_count),
               LogARG = integer(sample_count),
               LogMGE = integer(sample_count),
-              SampleID = integer(sample_count))
+              Random = integer(sample_count),
+              Random2 = integer(sample_count))
               
 
 #Filling data frame
 ref_length <- read.csv(
   "~/Documents/GitHub/TELS_analysis/output/references_length.csv", header=FALSE)
 for (i in 1:sample_count) {
-  if ((i-1)%%24 > 11) df$XTvsV2[i] <- 'XT'
-  else  df$XTvsV2[i] <- 'V2'
+  if ((i-1)%%(sample_count/4) > 11) df$Chemistry[i] <- 'XT'
+  else  df$Chemistry[i] <- 'V2'
   
-  if ((i-1)%/%24 == 0) df$SampleType[i] <- 'Bovine'
-  else if ((i-1)%/%24 == 1) df$SampleType[i] <- 'Human'
-  else if ((i-1)%/%24 == 2) df$SampleType[i] <- 'Mock'
+  if ((i-1)%/%(sample_count/4) == 0) df$SampleType[i] <- 'Bovine'
+  else if ((i-1)%/%(sample_count/4) == 1) df$SampleType[i] <- 'Human'
+  else if ((i-1)%/%(sample_count/4) == 2) df$SampleType[i] <- 'Mock'
   else df$SampleType[i] <- 'Soil'
   
-  if ((i-1)%%12 < 3) df$Probe[i] <- 'ARG'
-  else if ((i-1)%%12 < 6) df$Probe[i] <- 'ARG-MGE'
-  else if ((i-1)%%12 < 9) df$Probe[i] <- 'MGE'
-  else df$Probe[i] <- 'None'
+  if ((i-1)%%3 == 0) df$Random[i] <- 'A'
+  else if ((i-1)%%3 == 1) df$Random[i] <- 'B'
+  else df$Random[i] <- 'C'
+  df$Random2[i] <- df$Random[i]
   
-  if ((i-1)%%3 == 0) df$SampleID[i] <- 'A'
-  else if ((i-1)%%3 == 1) df$SampleID[i] <- 'B'
-  else df$SampleID[i] <- 'C'
-  
-
+  if ((i-1)%%(sample_count/8) < 3) df$Probe[i] <- 'ARG'
+  else if ((i-1)%%(sample_count/8) < 6) df$Probe[i] <- 'ARG-MGE'
+  else if ((i-1)%%(sample_count/8) < 9) df$Probe[i] <- 'MGE'
+  else {
+    df$Probe[i] <- 'None'
+    df$Random[i] <- df$Chemistry[i]
+    if ((i-1)%%12 == 9) df$Random2[i] <- 'ARG'
+    else if ((i-1)%%12 == 10) df$Random2[i] <- 'ARG-MGE'
+    else if ((i-1)%%12 == 11) df$Random2[i] <- 'MGE'
+    df$Chemistry[i] <- 'None'
+  }  
   
   colocalizations_richness <- read.csv(
     paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
@@ -87,131 +103,298 @@ for (i in 1:sample_count) {
                  sep=df$Samples[i]))
   
   df$Read_Count[i] <- stats$V2[2]
-  df$ARG[i] <- arg$Statistics[1]
-  df$MGE[i] <- mge$Statistics[1]
+  df$ARG[i] <- as.integer(arg$Statistics[1])
+  df$MGE[i] <- as.integer(mge$Statistics[1])
   df$LogARG[i] <- log2(1+as.numeric(arg$Statistics[1]))
   df$LogMGE[i] <- log2(1+as.numeric(mge$Statistics[1]))
-  df$Avg_Read_Length[i] <- sum(unlist(readlength))/stats$V2[2]
-  df$Unique_Coloc[i] = colocalizations_richness$V2[1]
-  df$MEGARes_Length[i] <- ref_length$V2[ref_length$V1 == "Megares"]
-  df$MGE_Length[i] <- ref_length$V2[ref_length$V1 == df$Samples[i]]
-  df$MEGARes_Seq_Depth[i] <- (df$Read_Count[i] * df$Avg_Read_Length[i])/df$MEGARes_Length[i]
-  df$MGE_Seq_Depth[i] <- (df$Read_Count[i] * df$Avg_Read_Length[i])/df$MGE_Length[i]
+  df$Total_Read_Length[i] <- sum(unlist(readlength))
+  df$Unique_Coloc[i] = as.integer(colocalizations_richness$V2[1])
 }
 
-fit_tels <- lme(Unique_Coloc ~ Probe * SampleType * XTvsV2 * as.numeric(MEGARes_Seq_Depth),
-                random=~Probe | SampleID,
-                data=df,
-                method='ML')
+bestfit <- function(dependent, indep, df, deciding_factor, random_var){
+  returns_best <- function(first, second) {
+    if (deciding_factor == "BIC") {
+      bic_df <- BIC(first, second)
+      if (bic_df$BIC[1] > bic_df$BIC[2]) return(second)
+      return(first)
+    }
+    else if (deciding_factor == "AIC") {
+      aic_df <- AIC(first, second)
+      if (aic_df$AIC[1] > aic_df$AIC[2]) return(second)
+      return(first)
+    }
+    else if (deciding_factor == "marginal_r") {
+      r.sq1 <- r.squaredGLMM(first)
+      r.sq2 <- r.squaredGLMM(second)
+      if (r.sq1$R2m[1] < r.sq2$R2m[1]) return(second)
+      return(first)
+    }
+    else if (deciding_factor == "conditional_r") {
+      r.sq1 <- r.squaredGLMM(first)
+      r.sq2 <- r.squaredGLMM(second)
+      if (r.sq1$R2c[1] < r.sq2$R2c[1]) return(second)
+      return(first)
+    }
+  }
+  
+  find_all_random_models <- function(rhs) {
+    toReturn <- list()
+    if (grepl(paste(random_var, " )"), as.character(rhs[2])) ) {
+      toReturn<-find_all_random_models(as.list(rhs[[2]]))
+    }
+    if (grepl(paste(random_var, " )"), as.character(rhs[3])) ) {
+      toReturn <- c(toReturn,as.character(rhs[[3]][[2]])[2])
+    }
+    return(toReturn)
+  }
+  
+  recursiveBestFit <- function(base_model, fixed_to_add_list){
+    best <- base_model
+    best_var <- NA
+    for (fixed_to_add in fixed_to_add_list) {
+      fixed_added <- update(base_model, .~. + str2lang(fixed_to_add))
+      fixed_added_in_effect <- update(fixed_added, .~. + (str2lang(fixed_to_add)|random_var))
+      
+      fixed_added_with_inter_plus0 <- fixed_added
+      fixed_added_with_inter_plus1 <- fixed_added
+      fixed_added_with_inter_plus2 <- fixed_added
+      fixed_added_in_effect_plus0 <- fixed_added_in_effect
+      fixed_added_in_effect_plus1 <- fixed_added_in_effect
+      fixed_added_in_effect_plus2 <- fixed_added_in_effect
+      fixed_added_with_mult_plus0 <- fixed_added
+      fixed_added_with_mult_plus1 <- fixed_added
+      fixed_added_with_mult_plus2 <- fixed_added
+      
+      
+      for (fixed_in_effect in find_all_random_models(as.list(base_model@call[["formula"]][[3]]))) {
+        if (grepl(":", fixed_in_effect) ||  grepl("*", fixed_in_effect)) {
+          for (single_fixed in as.character(as.list(str2lang(fixed_in_effect))[2:3])) {
+            
+            plus1.fixed_and_interaction_added <- update(fixed_added, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus1.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus1.fixed_and_mult_added <- update(fixed_added, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+            
+            plus1.updated_fixed_and_interaction_added <- update(fixed_added_with_inter_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus1.updated_fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus1.updated_fixed_and_mult_added <- update(fixed_added_with_mult_plus0, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+            
+            plus2.fixed_and_interaction_added <- update(fixed_added_with_inter_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
+            plus2.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
+            plus2.fixed_and_mult_added <- update(fixed_added_with_mult_plus1, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))                                     
+            
+            
+            plus0.fixed_and_interaction_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus0.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus0.fixed_and_mult_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+            
+            plus0.updated_fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus0.updated_fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus0.updated_fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+            
+            
+            plus1.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus1.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus1.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+            
+            plus2.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus2.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+            plus2.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+            
+            fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.fixed_and_interaction_added_with_replacement)
+            fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.updated_fixed_and_interaction_added_with_replacement)
+            fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added)
+            fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.updated_fixed_and_interaction_added)
+            fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added_with_replacement)
+            fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added)
+            fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added_with_replacement)
+            
+            fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.fixed_and_interaction_added_in_effect_with_replacement)
+            fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.updated_fixed_and_interaction_added_in_effect_with_replacement)
+            fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect)
+            fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.updated_fixed_and_interaction_added_in_effect)
+            fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect_with_replacement)
+            fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect)
+            fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect_with_replacement)
+            
+            fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.fixed_and_mult_added_with_replacement)
+            fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.updated_fixed_and_mult_added_with_replacement)
+            fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added)
+            fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.updated_fixed_and_mult_added)
+            fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added_with_replacement)
+            fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added)
+            fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added_with_replacement)
+            
+          }
+            
+        }
+        
+        else {
+          plus1.fixed_and_interaction_added <- update(fixed_added, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus1.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus1.fixed_and_mult_added <- update(fixed_added, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+          
+          plus1.updated_fixed_and_interaction_added <- update(fixed_added_with_inter_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus1.updated_fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus1.updated_fixed_and_mult_added <- update(fixed_added_with_mult_plus0, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+          
+          plus2.fixed_and_interaction_added <- update(fixed_added_with_inter_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
+          plus2.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
+          plus2.fixed_and_mult_added <- update(fixed_added_with_mult_plus1, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))                                     
+          
+          
+          plus0.fixed_and_interaction_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus0.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus0.fixed_and_mult_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+          
+          plus0.updated_fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus0.updated_fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus0.updated_fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+          
+          
+          plus1.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus1.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus1.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+          
+          plus2.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus2.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
+          plus2.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
+          
+          fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.fixed_and_interaction_added_with_replacement)
+          fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.updated_fixed_and_interaction_added_with_replacement)
+          fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added)
+          fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.updated_fixed_and_interaction_added)
+          fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added_with_replacement)
+          fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added)
+          fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added_with_replacement)
+          
+          fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.fixed_and_interaction_added_in_effect_with_replacement)
+          fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.updated_fixed_and_interaction_added_in_effect_with_replacement)
+          fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect)
+          fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.updated_fixed_and_interaction_added_in_effect)
+          fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect_with_replacement)
+          fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect)
+          fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect_with_replacement)
+          
+          fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.fixed_and_mult_added_with_replacement)
+          fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.updated_fixed_and_mult_added_with_replacement)
+          fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added)
+          fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.updated_fixed_and_mult_added)
+          fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added_with_replacement)
+          fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added)
+          fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added_with_replacement)
+          
+        }
+        
+      }
+    
+      temp_best <- best
+      best <- returns_best(best, fixed_added_with_inter_plus0)
+      best <- returns_best(best, fixed_added_with_inter_plus1)
+      best <- returns_best(best, fixed_added_with_inter_plus2)
+      best <- returns_best(best, fixed_added_in_effect_plus0)
+      best <- returns_best(best, fixed_added_in_effect_plus1)
+      best <- returns_best(best, fixed_added_in_effect_plus2)
+      best <- returns_best(best, fixed_added_with_mult_plus0)
+      best <- returns_best(best, fixed_added_with_mult_plus1)
+      best <- returns_best(best, fixed_added_with_mult_plus2)
+      
+      if (best != temp_best) best_var <- fixed_to_add
+      
+    }
+    if (best == base_model)
+      return(best)
+  
+  }
+  
+  
+  
 
-fit_tels <- lm(data=df, Unique_Coloc ~ Probe * SampleType)
-summary(fit_tels) # model summary
-coefficients(fit_tels) # model coefficients
-fitted(fit_tels) # predicted values
-residuals(fit_tels) # model residuals
-anova(fit_tels) # anova table, this is typically what we report
-#plot(fit_tels)
-
-fit_tels_arg <- lm(data=df, Unique_Coloc ~ as.numeric(ARG))
-summary(fit_tels_arg) # model summary
-coefficients(fit_tels_arg) # model coefficients
-fitted(fit_tels_arg) # predicted values
-residuals(fit_tels_arg) # model residuals
-anova(fit_tels_arg) # anova table, this is typically what we report
-#plot(fit_tels_arg)
-
-y_arg = integer(120001)
-for (i in 1:120001) {
-  y_arg[i] = fit_tels_arg$coefficients[1] + (i-1) * fit_tels_arg$coefficients[2]
 }
-plot(as.numeric(df$ARG), df$Unique_Coloc, main = "ARG Linear Regression", xlab = "ARG count", ylab = "Unique Colocalization")
-lines(y_arg, type="l")
 
-fit_tels_mge <- lm(data=df, Unique_Coloc ~ as.numeric(MGE))
-summary(fit_tels_mge) # model summary
-coefficients(fit_tels_mge) # model coefficients
-fitted(fit_tels_mge) # predicted values
-residuals(fit_tels_mge) # model residuals
-anova(fit_tels_mge) # anova table, this is typically what we report
-#plot(fit_tels_mge)
 
-y_mge = integer(130001)
-for (i in 1:130001) {
-  y_mge[i] = fit_tels_mge$coefficients[1] + (i-1) * fit_tels_mge$coefficients[2]
-}
-plot(as.numeric(df$MGE), df$Unique_Coloc, main = "MGE Linear Regression", xlab = "MGE count", ylab = "Unique Colocalization")
-lines(y_mge, type="l")
 
-fit_tels_arg_mge <- lm(data=df, Unique_Coloc ~ as.numeric(ARG) * as.numeric(MGE))
-summary(fit_tels_arg_mge) # model summary
-coefficients(fit_tels_arg_mge) # model coefficients
-fitted(fit_tels_arg_mge) # predicted values
-residuals(fit_tels_arg_mge) # model residuals
-anova(fit_tels_arg_mge) # anova table, this is typically what we report
-#plot(fit_tels_arg_mge)
 
-z_arg_mge = integer(10001)
-x_arg_mge = seq(0, 130000, by=13)
-y_arg_mge = seq(0, 120000, by=12)
-for (i in 1:10001) {
-  z_arg_mge[i] = fit_tels_arg_mge$coefficients[1] + y_arg_mge[i] * fit_tels_arg_mge$coefficients[2] + x_arg_mge[i] * fit_tels_arg_mge$coefficients[3]
-}
-plot3d(x=as.numeric(df$MGE), y=as.numeric(df$ARG), z=df$Unique_Coloc,
-       main = "ARG vs MGE Classified as and Aligned to ARG Linear Regression", 
-       xlab = "MGE count",
-       ylab = "ARG count", 
-       zlab = "Unique Colocalization")
-lines3d(x=x_arg_mge, y=y_arg_mge, z=z_arg_mge)
-rglwidget()
+lmer.coloc_grand_fit <- lmer(Unique_Coloc ~ Probe 
+                             * SampleType 
+                             * Chemistry 
+                             * Total_Read_Length
+                             + (SampleType:Probe | Random),
+                             data=df)
+r.squaredGLMM(lmer.coloc_grand_fit)
+AIC(lmer.coloc_grand_fit)
 
-fit_tels_arg_classifiedaligned <- lm(data=df, Unique_Coloc ~ as.numeric(ARG) + Classified_Aligned)
-summary(fit_tels_arg_classifiedaligned) # model summary
-coefficients(fit_tels_arg_classifiedaligned) # model coefficients
-fitted(fit_tels_arg_classifiedaligned) # predicted values
-residuals(fit_tels_arg_classifiedaligned) # model residuals
-anova(fit_tels_arg_classifiedaligned) # anova table, this is typically what we report
-#plot(fit_tels_arg_classifiedaligned)
+lmer.coloc_grand_fit2 <- update(lmer.coloc_grand_fit, .~.-(SampleType:Probe | Random) + (SampleType*Probe | Random))
+lmer.coloc_grand_fit2 <- update(lmer.coloc_grand_fit, .~. + (Probe | Random))
 
-z_arg_ca = integer(41)
-x_arg_ca = 0:40
-y_arg_ca = seq(0, 120000, by=3000)
-for (i in 1:41) {
-  z_arg_ca[i] = fit_tels_arg_classifiedaligned$coefficients[1] + y_arg_ca[i] * fit_tels_arg_classifiedaligned$coefficients[2] + x_arg_ca[i] * fit_tels_arg_classifiedaligned$coefficients[3]
-}
-plot3d(x=as.numeric(df$Classified_Aligned), y=as.numeric(df$ARG), z=df$Unique_Coloc,
-       main = "ARG vs MGE Classified as and Aligned to ARG Linear Regression", 
-       xlab = "MGE count",
-       ylab = "ARG count", 
-       zlab = "Unique Colocalization")
-lines3d(x=x_arg_ca, y=y_arg_ca, z=z_arg_ca)
-rglwidget()
+lmer.coloc_grand_fit2$call
 
-fit_tels_classifiedaligned <- lm(data=df, Unique_Coloc ~ Classified_Aligned)
-summary(fit_tels_classifiedaligned) # model summary
-coefficients(fit_tels_classifiedaligned) # model coefficients
-fitted(fit_tels_classifiedaligned) # predicted values
-residuals(fit_tels_classifiedaligned) # model residuals
-anova(fit_tels_classifiedaligned) # anova table, this is typically what we report
-#plot(fit_tels_classifiedaligned)
+test <- r.squaredGLMM(lmer.coloc_grand_fit2)
+AIC(lmer.coloc_grand_fit,lmer.coloc_grand_fit2)
+test <- BIC(lmer.coloc_grand_fit,lmer.coloc_grand_fit2)
 
-y_ca = integer(81)
-for (i in 1:81) {
-  y_ca[i] = fit_tels_classifiedaligned$coefficients[1] + (i-1) * fit_tels_classifiedaligned$coefficients[2]
-}
-plot(as.numeric(df$Classified_Aligned), df$Unique_Coloc, main = "MGE Classified as and Aligned to ARG Linear Regression", xlab = "MGE count", ylab = "Unique Colocalization")
-lines(y_ca, type="l")
+summary(lmer.coloc_grand_fit)
+residuals(lmer.coloc_grand_fit)[abs(residuals(lmer.coloc_grand_fit)) >= .5]
+ranef(lmer.coloc_grand_fit)
+plot(x = df$Unique_Coloc, 
+     y = round(fitted(lmer.coloc_grand_fit)),
+     main = "Unique Colocalization",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
 
-fit_tels_arg_to_ca <- lm(data=df, Classified_Aligned ~ as.numeric(ARG))
-summary(fit_tels_arg_to_ca) # model summary
-coefficients(fit_tels_arg_to_ca) # model coefficients
-fitted(fit_tels_arg_to_ca) # predicted values
-residuals(fit_tels_arg_to_ca) # model residuals
-anova(fit_tels_arg_to_ca) # anova table, this is typically what we report
-#plot(fit_tels_arg_to_ca)
+lmer.no_probe <- lmer(Unique_Coloc ~ SampleType
+                      * Chemistry 
+                      * Total_Read_Length 
+                      + (SampleType | Random),
+                      data=df)
+r.squaredGLMM(lmer.no_probe)
 
-y_arg_to_ca = integer(120001)
-for (i in 1:120001) {
-  y_arg_to_ca[i] = fit_tels_arg_to_ca$coefficients[1] + (i-1) * fit_tels_arg_to_ca$coefficients[2]
-}
-plot(as.numeric(df$ARG), df$Classified_Aligned, main = "ARG Linear Regression", xlab = "ARG count", ylab = "MGE count")
-lines(y_arg_to_ca, type="l")
+summary(lmer.no_probe)
+residuals(lmer.no_probe)[abs(residuals(lmer.no_probe)) >= 5]
+ranef(lmer.no_probe)
+
+lmer.no_chemistry <- lmer(Unique_Coloc ~ Probe
+                          * SampleType 
+                          * Total_Read_Length 
+                          + (SampleType:Probe | Random),
+                          data=df)
+r.squaredGLMM(lmer.no_chemistry)
+
+summary(lmer.no_chemistry)
+residuals(lmer.no_chemistry)[abs(residuals(lmer.no_chemistry)) >= 5]
+ranef(lmer.no_chemistry)
+
+lmer.no_length <- lmer(Unique_Coloc ~ Probe 
+                       * SampleType 
+                       * Chemistry 
+                       + (SampleType:Probe | Random),
+                       data=df)
+r.squaredGLMM(lmer.no_length)
+
+summary(lmer.no_length)
+residuals(lmer.no_length)[abs(residuals(lmer.no_length)) >= 5]
+ranef(lmer.no_length)
+
+
+
+
+
+
+
+lmer.read_grand_fit <- lmer(Read_Count ~ Probe 
+                            * SampleType 
+                            * Chemistry 
+                            * Total_Read_Length
+                            + (Probe:SampleType | Random),
+                            data=df)
+r.squaredGLMM(lmer.read_grand_fit)
+
+summary(lmer.read_grand_fit)
+residuals(lmer.read_grand_fit)[abs(residuals(lmer.read_grand_fit)) >= 5000]
+ranef(lmer.read_grand_fit)
+plot(x = df$Read_Count, 
+     y = round(fitted(lmer.read_grand_fit)),
+     main = "Unique Colocalization",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
+
+
