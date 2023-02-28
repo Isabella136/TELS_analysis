@@ -1,31 +1,18 @@
 if (!require("rjson")) {
   install.packages("rjson")
 }
-if (!require("rgl")) {
-  install.packages("rgl")
-}
-if (!require("nlme")) {
-  install.packages("nlme")
-}
 if (!require("lme4")) {
   install.packages("lme4")
-}
-if (!require("RLRsim")) {
-  install.packages("RLRsim")
 }
 if (!require("MuMIn")) {
   install.packages('MuMIn')
 }
-
 if (!require("dplyr")) {
   install.packages('dplyr')
 }
 
 library(rjson)
-library(rgl)
-library(nlme)
 library(lme4)
-library(RLRsim)
 library(MuMIn)
 library(dplyr)
 
@@ -39,6 +26,14 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
                         "MOXTAA","MOXTAB","MOXTAC","MOXTAMA","MOXTAMB","MOXTAMC","MOXTMA","MOXTMB","MOXTMC","MOXTNEGA",'MOXTNEGAM',"MOXTNEGM",
                         "SV2AA","SV2AB","SV2AC","SV2AMA","SV2AMB","SV2AMC","SV2MA","SV2MB","SV2MC","SV2NEGA","SV2NEGAM","SV2NEGM",
                         "SXTAA","SXTAB","SXTAC","SXTAMA","SXTAMB","SXTAMC","SXTMA","SXTMB","SXTMC","SXTNEGA","SXTNEGAM","SXTNEGM"),
+              SampleID=c("BFV2A","BFV2A","BFV2A","BFV2AM","BFV2AM","BFV2AM","BFV2M","BFV2M","BFV2M","BFV2NEG","BFV2NEG","BFV2NEG",
+                         "BFXTA","BFXTA","BFXTA","BFXTAM","BFXTAM","BFXTAM","BFXTM","BFXTM","BFXTM",'BFXTNEG',"BFXTNEG","BFXTNEG",
+                         "HFV2A","HFV2A","HFV2A","HFV2AM","HFV2AM","HFV2AM","HFV2M","HFV2M","HFV2M","HFV2NEG","HFV2NEG","HFV2NEG",
+                         "HFXTA","HFXTA","HFXTA","HFXTAM","HFXTAM","HFXTAM","HFXTM","HFXTM","HFXTM","HFXTNEG","HFXTNEG","HFXTNEG",
+                         "MOV2A","MOV2A","MOV2A","MOV2AM","MOV2AM","MOV2AM","MOV2M","MOV2M","MOV2M","MOV2NEG","MOV2NEG","MOV2NEG",
+                         "MOXTA","MOXTA","MOXTA","MOXTAM","MOXTAM","MOXTAM","MOXTM","MOXTM","MOXTM","MOXTNEG",'MOXTNEG',"MOXTNEG",
+                         "SV2A","SV2A","SV2A","SV2AM","SV2AM","SV2AM","SV2M","SV2M","SV2M","SV2NEG","SV2NEG","SV2NEG",
+                         "SXTA","SXTA","SXTA","SXTAM","SXTAM","SXTAM","SXTM","SXTM","SXTM","SXTNEG","SXTNEG","SXTNEG"),
               Chemistry = integer(sample_count),
               SampleType = integer(sample_count),
               Probe = integer(sample_count),
@@ -49,9 +44,8 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
               MGE = integer(sample_count),
               LogARG = integer(sample_count),
               LogMGE = integer(sample_count),
-              Random = integer(sample_count),
-              Random2 = integer(sample_count),
-              Random3 = integer(sample_count))
+              Random = integer(sample_count)
+)
               
 
 #Filling data frame
@@ -69,27 +63,15 @@ for (i in 1:sample_count) {
   if ((i-1)%%3 == 0) df$Random[i] <- 'A'
   else if ((i-1)%%3 == 1) df$Random[i] <- 'B'
   else df$Random[i] <- 'C'
-  df$Random2[i] <- df$Random[i]
-  df$Random3[i] <- df$Random[i]
   
   if ((i-1)%%(sample_count/8) < 3) df$Probe[i] <- 'ARG'
   else if ((i-1)%%(sample_count/8) < 6) df$Probe[i] <- 'ARG-MGE'
   else if ((i-1)%%(sample_count/8) < 9) df$Probe[i] <- 'MGE'
   else {
     df$Probe[i] <- 'None'
-    df$Random[i] <- df$Chemistry[i]
-    if ((i-1)%%12 == 9) {
-      df$Random2[i] <- 'ARG'
-      df$Random3[i] <- 'A'
-    }
-    else if ((i-1)%%12 == 10) {
-      df$Random2[i] <- 'ARG-MGE'
-      df$Random3[i] <- 'B'
-    }
-    else if ((i-1)%%12 == 11) {
-      df$Random2[i] <- 'MGE'
-      df$Random3[i] <- 'C'
-    }
+    if ((i-1)%%12 == 9) df$Random[i] <- 'A'
+    else if ((i-1)%%12 == 10) df$Random[i] <- 'B'
+    else if ((i-1)%%12 == 11) df$Random[i] <- 'C'
     df$Chemistry[i] <- 'None'
   }  
   
@@ -145,7 +127,7 @@ lmer.coloc_grand_fit <- lmer(Unique_Coloc ~ Probe
                             * SampleType 
                             * Chemistry 
                             * Total_Read_Length
-                            + (Probe:SampleType | Random),
+                            + (1 | SampleID),
                             data=df)
 lmer.coloc_best_fit <- lmer.step(lmer.coloc_grand_fit)
 
@@ -155,7 +137,6 @@ extractAIC(lmer.coloc_grand_fit)
 extractAIC(lmer.coloc_best_fit)
 
 summary(lmer.coloc_best_fit)
-residuals(lmer.coloc_best_fit)[abs(residuals(lmer.coloc_best_fit)) >= .5]
 ranef(lmer.coloc_best_fit)
 plot(x = df$Unique_Coloc, 
      y = round(fitted(lmer.coloc_best_fit)),
@@ -166,7 +147,7 @@ plot(x = df$Unique_Coloc,
 lmer.read_grand_fit <- lmer(Read_Count ~ Probe 
                             * SampleType 
                             * Chemistry 
-                            + (Probe:SampleType | Random),
+                            + (1 | SampleID),
                             data=df)
 lmer.read_best_fit <- lmer.step(lmer.read_grand_fit)
 
@@ -176,7 +157,6 @@ extractAIC(lmer.read_grand_fit)
 extractAIC(lmer.read_best_fit)
 
 summary(lmer.read_best_fit)
-residuals(lmer.read_best_fit)[abs(residuals(lmer.read_best_fit)) >= 50000]
 ranef(lmer.read_best_fit)
 plot(x = df$Read_Count, 
      y = round(fitted(lmer.read_best_fit)),
@@ -188,7 +168,7 @@ lmer.ARG_grand_fit <- lmer(ARG ~ Probe
                             * SampleType 
                             * Chemistry 
                             * Total_Read_Length
-                            + (Probe:SampleType | Random),
+                            + (1 | SampleID),
                             data=df)
 lmer.ARG_best_fit <- lmer.step(lmer.ARG_grand_fit)
 
@@ -198,7 +178,6 @@ extractAIC(lmer.ARG_grand_fit)
 extractAIC(lmer.ARG_best_fit)
 
 summary(lmer.ARG_best_fit)
-residuals(lmer.ARG_best_fit)[abs(residuals(lmer.ARG_best_fit)) >= 5]
 ranef(lmer.ARG_best_fit)
 plot(x = df$ARG, 
      y = round(fitted(lmer.ARG_best_fit)),
@@ -210,7 +189,7 @@ lmer.MGE_grand_fit <- lmer(MGE ~ Probe
                            * SampleType 
                            * Chemistry 
                            * Total_Read_Length
-                           + (Probe:SampleType | Random),
+                           + (1 | SampleID),
                            data=df)
 lmer.MGE_best_fit <- lmer.step(lmer.MGE_grand_fit)
 
@@ -220,7 +199,6 @@ extractAIC(lmer.MGE_grand_fit)
 extractAIC(lmer.MGE_best_fit)
 
 summary(lmer.MGE_best_fit)
-residuals(lmer.MGE_best_fit)[abs(residuals(lmer.MGE_best_fit)) >= 50]
 ranef(lmer.MGE_best_fit)
 plot(x = df$MGE, 
      y = round(fitted(lmer.MGE_best_fit)),
@@ -228,90 +206,37 @@ plot(x = df$MGE,
      xlab = "Original Values",
      ylab = "Fitted Values")
 
-#For control, use assigned probe as random variable
-lmer.coloc_grand_fit_2 <- lmer(Unique_Coloc ~ Probe 
-                             * SampleType 
-                             * Chemistry 
-                             * Total_Read_Length
-                             + (SampleType:Chemistry | Random2),
-                             data=df)
-lmer.coloc_best_fit_2 <- lmer.step(lmer.coloc_grand_fit_2)
-
-r.squaredGLMM(lmer.coloc_grand_fit_2)
-r.squaredGLMM(lmer.coloc_best_fit_2)
-extractAIC(lmer.coloc_grand_fit_2)
-extractAIC(lmer.coloc_best_fit_2)
-
-summary(lmer.coloc_best_fit_2)
-residuals(lmer.coloc_best_fit_2)[abs(residuals(lmer.coloc_best_fit_2)) >= .5]
-ranef(lmer.coloc_best_fit_2)
-plot(x = df$Unique_Coloc, 
-     y = round(fitted(lmer.coloc_best_fit_2)),
-     main = "Unique Colocalization",
-     xlab = "Original Values",
-     ylab = "Fitted Values")
-
-lmer.read_grand_fit_2 <- lmer(Read_Count ~ Probe 
-                            * SampleType 
-                            * Chemistry 
-                            + (Probe:SampleType | Random),
-                            data=df)
-lmer.read_best_fit_2 <- lmer.step(lmer.read_grand_fit_2)
-
-r.squaredGLMM(lmer.read_grand_fit_2)
-r.squaredGLMM(lmer.read_best_fit_2)
-extractAIC(lmer.read_grand_fit_2)
-extractAIC(lmer.read_best_fit_2)
-
-summary(lmer.read_best_fit_2)
-residuals(lmer.read_best_fit_2)[abs(residuals(lmer.read_best_fit_2)) >= 50000]
-ranef(lmer.read_best_fit_2)
-plot(x = df$Read_Count, 
-     y = round(fitted(lmer.read_best_fit_2)),
-     main = "Total Reads",
-     xlab = "Original Values",
-     ylab = "Fitted Values")
-
-lmer.ARG_grand_fit_2 <- lmer(ARG ~ Probe 
-                           * SampleType 
-                           * Chemistry 
-                           * Total_Read_Length
-                           + (Probe:SampleType | Random),
-                           data=df)
-lmer.ARG_best_fit_2 <- lmer.step(lmer.ARG_grand_fit_2)
-
-r.squaredGLMM(lmer.ARG_grand_fit_2)
-r.squaredGLMM(lmer.ARG_best_fit_2)
-extractAIC(lmer.ARG_grand_fit_2)
-extractAIC(lmer.ARG_best_fit_2)
-
-summary(lmer.ARG_best_fit_2)
-residuals(lmer.ARG_best_fit_2)[abs(residuals(lmer.ARG_best_fit_2)) >= 5]
-ranef(lmer.ARG_best_fit_2)
-plot(x = df$ARG, 
-     y = round(fitted(lmer.ARG_best_fit_2)),
-     main = "ARG Richness",
-     xlab = "Original Values",
-     ylab = "Fitted Values")
-
-lmer.MGE_grand_fit_2 <- lmer(MGE ~ Probe 
-                           * SampleType 
-                           * Chemistry 
-                           * Total_Read_Length
-                           + (Probe:SampleType | Random),
-                           data=df)
-lmer.MGE_best_fit_2 <- lmer.step(lmer.MGE_grand_fit_2)
-
-r.squaredGLMM(lmer.MGE_grand_fit_2)
-r.squaredGLMM(lmer.MGE_best_fit_2)
-extractAIC(lmer.MGE_grand_fit_2)
-extractAIC(lmer.MGE_best_fit_2)
-
-summary(lmer.MGE_best_fit_2)
-residuals(lmer.MGE_best_fit_2)[abs(residuals(lmer.MGE_best_fit_2)) >= 50]
-ranef(lmer.MGE_best_fit_2)
-plot(x = df$MGE, 
-     y = round(fitted(lmer.MGE_best_fit_2)),
-     main = "MGE Richness",
-     xlab = "Original Values",
-     ylab = "Fitted Values")
+results <- data.frame(best_fit=c(as.character(lmer.coloc_best_fit@call[["formula"]])[[3]],
+                                 as.character(lmer.read_best_fit@call[["formula"]])[[3]],
+                                 as.character(lmer.ARG_best_fit@call[["formula"]])[[3]],
+                                 as.character(lmer.MGE_best_fit@call[["formula"]])[[3]]),
+                      R2m._grand_fit=c(r.squaredGLMM(lmer.coloc_grand_fit)[1],
+                                       r.squaredGLMM(lmer.read_grand_fit)[1],
+                                       r.squaredGLMM(lmer.ARG_grand_fit)[1],
+                                       r.squaredGLMM(lmer.MGE_grand_fit)[1]),
+                      R2c._grand_fit=c(r.squaredGLMM(lmer.coloc_grand_fit)[2],
+                                       r.squaredGLMM(lmer.read_grand_fit)[2],
+                                       r.squaredGLMM(lmer.ARG_grand_fit)[2],
+                                       r.squaredGLMM(lmer.MGE_grand_fit)[2]),
+                      R2m._best_fit=c(r.squaredGLMM(lmer.coloc_best_fit)[1],
+                                      r.squaredGLMM(lmer.read_best_fit)[1],
+                                      r.squaredGLMM(lmer.ARG_best_fit)[1],
+                                      r.squaredGLMM(lmer.MGE_best_fit)[1]),
+                      R2c._best_fit=c(r.squaredGLMM(lmer.coloc_best_fit)[2],
+                                      r.squaredGLMM(lmer.read_best_fit)[2],
+                                      r.squaredGLMM(lmer.ARG_best_fit)[2],
+                                      r.squaredGLMM(lmer.MGE_best_fit)[2]),
+                      AIC._grand_fit=c(extractAIC(lmer.coloc_grand_fit)[2],
+                                       extractAIC(lmer.read_grand_fit)[2],
+                                       extractAIC(lmer.ARG_grand_fit)[2],
+                                       extractAIC(lmer.MGE_grand_fit)[2]),
+                      AIC._best_fit=c(extractAIC(lmer.coloc_best_fit)[2],
+                                      extractAIC(lmer.read_best_fit)[2],
+                                      extractAIC(lmer.ARG_best_fit)[2],
+                                      extractAIC(lmer.MGE_best_fit)[2]),
+                      row.names = c("Colocalization", "Read Count", "ARG", "MGE"))
+ranef_results <- data.frame(Colocalization=ranef(lmer.coloc_best_fit)[["SampleID"]][["(Intercept)"]],
+                            Read_Count=ranef(lmer.read_best_fit)[["SampleID"]][["(Intercept)"]],
+                            ARG=ranef(lmer.ARG_best_fit)[["SampleID"]][["(Intercept)"]],
+                            MGE=ranef(lmer.MGE_best_fit)[["SampleID"]][["(Intercept)"]],
+                            row.names = row.names(ranef(lmer.ARG_best_fit)[["SampleID"]]))
