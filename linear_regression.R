@@ -17,12 +17,17 @@ if (!require("MuMIn")) {
   install.packages('MuMIn')
 }
 
+if (!require("dplyr")) {
+  install.packages('dplyr')
+}
+
 library(rjson)
 library(rgl)
 library(nlme)
 library(lme4)
 library(RLRsim)
 library(MuMIn)
+library(dplyr)
 
 #Creating data frame of results
 sample_count = 96
@@ -45,7 +50,8 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
               LogARG = integer(sample_count),
               LogMGE = integer(sample_count),
               Random = integer(sample_count),
-              Random2 = integer(sample_count))
+              Random2 = integer(sample_count),
+              Random3 = integer(sample_count))
               
 
 #Filling data frame
@@ -64,6 +70,7 @@ for (i in 1:sample_count) {
   else if ((i-1)%%3 == 1) df$Random[i] <- 'B'
   else df$Random[i] <- 'C'
   df$Random2[i] <- df$Random[i]
+  df$Random3[i] <- df$Random[i]
   
   if ((i-1)%%(sample_count/8) < 3) df$Probe[i] <- 'ARG'
   else if ((i-1)%%(sample_count/8) < 6) df$Probe[i] <- 'ARG-MGE'
@@ -71,9 +78,18 @@ for (i in 1:sample_count) {
   else {
     df$Probe[i] <- 'None'
     df$Random[i] <- df$Chemistry[i]
-    if ((i-1)%%12 == 9) df$Random2[i] <- 'ARG'
-    else if ((i-1)%%12 == 10) df$Random2[i] <- 'ARG-MGE'
-    else if ((i-1)%%12 == 11) df$Random2[i] <- 'MGE'
+    if ((i-1)%%12 == 9) {
+      df$Random2[i] <- 'ARG'
+      df$Random3[i] <- 'A'
+    }
+    else if ((i-1)%%12 == 10) {
+      df$Random2[i] <- 'ARG-MGE'
+      df$Random3[i] <- 'B'
+    }
+    else if ((i-1)%%12 == 11) {
+      df$Random2[i] <- 'MGE'
+      df$Random3[i] <- 'C'
+    }
     df$Chemistry[i] <- 'None'
   }  
   
@@ -111,290 +127,191 @@ for (i in 1:sample_count) {
   df$Unique_Coloc[i] = as.integer(colocalizations_richness$V2[1])
 }
 
-bestfit <- function(dependent, indep, df, deciding_factor, random_var){
-  returns_best <- function(first, second) {
-    if (deciding_factor == "BIC") {
-      bic_df <- BIC(first, second)
-      if (bic_df$BIC[1] > bic_df$BIC[2]) return(second)
-      return(first)
-    }
-    else if (deciding_factor == "AIC") {
-      aic_df <- AIC(first, second)
-      if (aic_df$AIC[1] > aic_df$AIC[2]) return(second)
-      return(first)
-    }
-    else if (deciding_factor == "marginal_r") {
-      r.sq1 <- r.squaredGLMM(first)
-      r.sq2 <- r.squaredGLMM(second)
-      if (r.sq1$R2m[1] < r.sq2$R2m[1]) return(second)
-      return(first)
-    }
-    else if (deciding_factor == "conditional_r") {
-      r.sq1 <- r.squaredGLMM(first)
-      r.sq2 <- r.squaredGLMM(second)
-      if (r.sq1$R2c[1] < r.sq2$R2c[1]) return(second)
-      return(first)
-    }
-  }
-  
-  find_all_random_models <- function(rhs) {
-    toReturn <- list()
-    if (grepl(paste(random_var, " )"), as.character(rhs[2])) ) {
-      toReturn<-find_all_random_models(as.list(rhs[[2]]))
-    }
-    if (grepl(paste(random_var, " )"), as.character(rhs[3])) ) {
-      toReturn <- c(toReturn,as.character(rhs[[3]][[2]])[2])
-    }
-    return(toReturn)
-  }
-  
-  recursiveBestFit <- function(base_model, fixed_to_add_list){
-    best <- base_model
-    best_var <- NA
-    for (fixed_to_add in fixed_to_add_list) {
-      fixed_added <- update(base_model, .~. + str2lang(fixed_to_add))
-      fixed_added_in_effect <- update(fixed_added, .~. + (str2lang(fixed_to_add)|random_var))
-      
-      fixed_added_with_inter_plus0 <- fixed_added
-      fixed_added_with_inter_plus1 <- fixed_added
-      fixed_added_with_inter_plus2 <- fixed_added
-      fixed_added_in_effect_plus0 <- fixed_added_in_effect
-      fixed_added_in_effect_plus1 <- fixed_added_in_effect
-      fixed_added_in_effect_plus2 <- fixed_added_in_effect
-      fixed_added_with_mult_plus0 <- fixed_added
-      fixed_added_with_mult_plus1 <- fixed_added
-      fixed_added_with_mult_plus2 <- fixed_added
-      
-      
-      for (fixed_in_effect in find_all_random_models(as.list(base_model@call[["formula"]][[3]]))) {
-        if (grepl(":", fixed_in_effect) ||  grepl("*", fixed_in_effect)) {
-          for (single_fixed in as.character(as.list(str2lang(fixed_in_effect))[2:3])) {
-            
-            plus1.fixed_and_interaction_added <- update(fixed_added, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus1.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus1.fixed_and_mult_added <- update(fixed_added, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-            
-            plus1.updated_fixed_and_interaction_added <- update(fixed_added_with_inter_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus1.updated_fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus1.updated_fixed_and_mult_added <- update(fixed_added_with_mult_plus0, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-            
-            plus2.fixed_and_interaction_added <- update(fixed_added_with_inter_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
-            plus2.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
-            plus2.fixed_and_mult_added <- update(fixed_added_with_mult_plus1, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))                                     
-            
-            
-            plus0.fixed_and_interaction_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus0.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus0.fixed_and_mult_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-            
-            plus0.updated_fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus0.updated_fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus0.updated_fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-            
-            
-            plus1.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus1.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus1.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-            
-            plus2.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus2.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-            plus2.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-            
-            fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.fixed_and_interaction_added_with_replacement)
-            fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.updated_fixed_and_interaction_added_with_replacement)
-            fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added)
-            fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.updated_fixed_and_interaction_added)
-            fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added_with_replacement)
-            fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added)
-            fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added_with_replacement)
-            
-            fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.fixed_and_interaction_added_in_effect_with_replacement)
-            fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.updated_fixed_and_interaction_added_in_effect_with_replacement)
-            fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect)
-            fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.updated_fixed_and_interaction_added_in_effect)
-            fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect_with_replacement)
-            fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect)
-            fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect_with_replacement)
-            
-            fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.fixed_and_mult_added_with_replacement)
-            fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.updated_fixed_and_mult_added_with_replacement)
-            fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added)
-            fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.updated_fixed_and_mult_added)
-            fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added_with_replacement)
-            fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added)
-            fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added_with_replacement)
-            
-          }
-            
-        }
-        
-        else {
-          plus1.fixed_and_interaction_added <- update(fixed_added, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus1.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus1.fixed_and_mult_added <- update(fixed_added, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-          
-          plus1.updated_fixed_and_interaction_added <- update(fixed_added_with_inter_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus1.updated_fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus0, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus1.updated_fixed_and_mult_added <- update(fixed_added_with_mult_plus0, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-          
-          plus2.fixed_and_interaction_added <- update(fixed_added_with_inter_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
-          plus2.fixed_and_interaction_added_in_effect <- update(fixed_added_in_effect_plus1, .~. + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))                                     
-          plus2.fixed_and_mult_added <- update(fixed_added_with_mult_plus1, .~. + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))                                     
-          
-          
-          plus0.fixed_and_interaction_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus0.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus0.fixed_and_mult_added_with_replacement <- update(fixed_added, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-          
-          plus0.updated_fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus0.updated_fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus0.updated_fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus0, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-          
-          
-          plus1.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus1.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus1.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus1, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-          
-          plus2.fixed_and_interaction_added_with_replacement <- update(fixed_added_with_inter_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus2.fixed_and_interaction_added_in_effect_with_replacement <- update(fixed_added_in_effect_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add):str2lang(single_fixed)|random_var))
-          plus2.fixed_and_mult_added_with_replacement <- update(fixed_added_with_mult_plus2, .~. - str2lang(fixed_in_effect) + (str2lang(fixed_to_add)*str2lang(single_fixed)|random_var))
-          
-          fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.fixed_and_interaction_added_with_replacement)
-          fixed_added_with_inter_plus0 <- returns_best(fixed_added_with_inter_plus0, plus0.updated_fixed_and_interaction_added_with_replacement)
-          fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added)
-          fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.updated_fixed_and_interaction_added)
-          fixed_added_with_inter_plus1 <- returns_best(fixed_added_with_inter_plus1, plus1.fixed_and_interaction_added_with_replacement)
-          fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added)
-          fixed_added_with_inter_plus2 <- returns_best(fixed_added_with_inter_plus2, plus2.fixed_and_interaction_added_with_replacement)
-          
-          fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.fixed_and_interaction_added_in_effect_with_replacement)
-          fixed_added_in_effect_plus0 <- returns_best(fixed_added_in_effect_plus0, plus0.updated_fixed_and_interaction_added_in_effect_with_replacement)
-          fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect)
-          fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.updated_fixed_and_interaction_added_in_effect)
-          fixed_added_in_effect_plus1 <- returns_best(fixed_added_in_effect_plus1, plus1.fixed_and_interaction_added_in_effect_with_replacement)
-          fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect)
-          fixed_added_in_effect_plus2 <- returns_best(fixed_added_in_effect_plus2, plus2.fixed_and_interaction_added_in_effect_with_replacement)
-          
-          fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.fixed_and_mult_added_with_replacement)
-          fixed_added_with_mult_plus0 <- returns_best(fixed_added_with_mult_plus0, plus0.updated_fixed_and_mult_added_with_replacement)
-          fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added)
-          fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.updated_fixed_and_mult_added)
-          fixed_added_with_mult_plus1 <- returns_best(fixed_added_with_mult_plus1, plus1.fixed_and_mult_added_with_replacement)
-          fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added)
-          fixed_added_with_mult_plus2 <- returns_best(fixed_added_with_mult_plus2, plus2.fixed_and_mult_added_with_replacement)
-          
-        }
-        
-      }
-    
-      temp_best <- best
-      best <- returns_best(best, fixed_added_with_inter_plus0)
-      best <- returns_best(best, fixed_added_with_inter_plus1)
-      best <- returns_best(best, fixed_added_with_inter_plus2)
-      best <- returns_best(best, fixed_added_in_effect_plus0)
-      best <- returns_best(best, fixed_added_in_effect_plus1)
-      best <- returns_best(best, fixed_added_in_effect_plus2)
-      best <- returns_best(best, fixed_added_with_mult_plus0)
-      best <- returns_best(best, fixed_added_with_mult_plus1)
-      best <- returns_best(best, fixed_added_with_mult_plus2)
-      
-      if (best != temp_best) best_var <- fixed_to_add
-      
-    }
-    if (best == base_model)
-      return(best)
-  
-  }
-  
-  
-  
-
+lmer.step <- function(object, steps = 1000, current_step = 0){
+  if (current_step == steps)
+    return(object)
+  fit_change <- drop1(object)
+  fit_change <- arrange(fit_change, AIC)
+  smallest <- rownames(fit_change)[1]
+  if (smallest == "<none>")
+    return(object)
+  new <- update(object, paste(".~. -" , smallest))
+  return(lmer.step(new, current_step = current_step+1))
 }
 
 
-
-
+#For control, use assigned chemistry as random variable
 lmer.coloc_grand_fit <- lmer(Unique_Coloc ~ Probe 
-                             * SampleType 
-                             * Chemistry 
-                             * Total_Read_Length
-                             + (SampleType:Probe | Random),
-                             data=df)
-r.squaredGLMM(lmer.coloc_grand_fit)
-AIC(lmer.coloc_grand_fit)
-
-lmer.coloc_grand_fit2 <- update(lmer.coloc_grand_fit, .~.-(SampleType:Probe | Random) + (SampleType*Probe | Random))
-lmer.coloc_grand_fit2 <- update(lmer.coloc_grand_fit, .~. + (Probe | Random))
-
-lmer.coloc_grand_fit2$call
-
-test <- r.squaredGLMM(lmer.coloc_grand_fit2)
-AIC(lmer.coloc_grand_fit,lmer.coloc_grand_fit2)
-test <- BIC(lmer.coloc_grand_fit,lmer.coloc_grand_fit2)
-
-summary(lmer.coloc_grand_fit)
-residuals(lmer.coloc_grand_fit)[abs(residuals(lmer.coloc_grand_fit)) >= .5]
-ranef(lmer.coloc_grand_fit)
-plot(x = df$Unique_Coloc, 
-     y = round(fitted(lmer.coloc_grand_fit)),
-     main = "Unique Colocalization",
-     xlab = "Original Values",
-     ylab = "Fitted Values")
-
-lmer.no_probe <- lmer(Unique_Coloc ~ SampleType
-                      * Chemistry 
-                      * Total_Read_Length 
-                      + (SampleType | Random),
-                      data=df)
-r.squaredGLMM(lmer.no_probe)
-
-summary(lmer.no_probe)
-residuals(lmer.no_probe)[abs(residuals(lmer.no_probe)) >= 5]
-ranef(lmer.no_probe)
-
-lmer.no_chemistry <- lmer(Unique_Coloc ~ Probe
-                          * SampleType 
-                          * Total_Read_Length 
-                          + (SampleType:Probe | Random),
-                          data=df)
-r.squaredGLMM(lmer.no_chemistry)
-
-summary(lmer.no_chemistry)
-residuals(lmer.no_chemistry)[abs(residuals(lmer.no_chemistry)) >= 5]
-ranef(lmer.no_chemistry)
-
-lmer.no_length <- lmer(Unique_Coloc ~ Probe 
-                       * SampleType 
-                       * Chemistry 
-                       + (SampleType:Probe | Random),
-                       data=df)
-r.squaredGLMM(lmer.no_length)
-
-summary(lmer.no_length)
-residuals(lmer.no_length)[abs(residuals(lmer.no_length)) >= 5]
-ranef(lmer.no_length)
-
-
-
-
-
-
-
-lmer.read_grand_fit <- lmer(Read_Count ~ Probe 
                             * SampleType 
                             * Chemistry 
                             * Total_Read_Length
                             + (Probe:SampleType | Random),
                             data=df)
-r.squaredGLMM(lmer.read_grand_fit)
+lmer.coloc_best_fit <- lmer.step(lmer.coloc_grand_fit)
 
-summary(lmer.read_grand_fit)
-residuals(lmer.read_grand_fit)[abs(residuals(lmer.read_grand_fit)) >= 5000]
-ranef(lmer.read_grand_fit)
-plot(x = df$Read_Count, 
-     y = round(fitted(lmer.read_grand_fit)),
+r.squaredGLMM(lmer.coloc_grand_fit)
+r.squaredGLMM(lmer.coloc_best_fit)
+extractAIC(lmer.coloc_grand_fit)
+extractAIC(lmer.coloc_best_fit)
+
+summary(lmer.coloc_best_fit)
+residuals(lmer.coloc_best_fit)[abs(residuals(lmer.coloc_best_fit)) >= .5]
+ranef(lmer.coloc_best_fit)
+plot(x = df$Unique_Coloc, 
+     y = round(fitted(lmer.coloc_best_fit)),
      main = "Unique Colocalization",
      xlab = "Original Values",
      ylab = "Fitted Values")
 
+lmer.read_grand_fit <- lmer(Read_Count ~ Probe 
+                            * SampleType 
+                            * Chemistry 
+                            + (Probe:SampleType | Random),
+                            data=df)
+lmer.read_best_fit <- lmer.step(lmer.read_grand_fit)
 
+r.squaredGLMM(lmer.read_grand_fit)
+r.squaredGLMM(lmer.read_best_fit)
+extractAIC(lmer.read_grand_fit)
+extractAIC(lmer.read_best_fit)
+
+summary(lmer.read_best_fit)
+residuals(lmer.read_best_fit)[abs(residuals(lmer.read_best_fit)) >= 50000]
+ranef(lmer.read_best_fit)
+plot(x = df$Read_Count, 
+     y = round(fitted(lmer.read_best_fit)),
+     main = "Total Reads",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
+
+lmer.ARG_grand_fit <- lmer(ARG ~ Probe 
+                            * SampleType 
+                            * Chemistry 
+                            * Total_Read_Length
+                            + (Probe:SampleType | Random),
+                            data=df)
+lmer.ARG_best_fit <- lmer.step(lmer.ARG_grand_fit)
+
+r.squaredGLMM(lmer.ARG_grand_fit)
+r.squaredGLMM(lmer.ARG_best_fit)
+extractAIC(lmer.ARG_grand_fit)
+extractAIC(lmer.ARG_best_fit)
+
+summary(lmer.ARG_best_fit)
+residuals(lmer.ARG_best_fit)[abs(residuals(lmer.ARG_best_fit)) >= 5]
+ranef(lmer.ARG_best_fit)
+plot(x = df$ARG, 
+     y = round(fitted(lmer.ARG_best_fit)),
+     main = "ARG Richness",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
+
+lmer.MGE_grand_fit <- lmer(MGE ~ Probe 
+                           * SampleType 
+                           * Chemistry 
+                           * Total_Read_Length
+                           + (Probe:SampleType | Random),
+                           data=df)
+lmer.MGE_best_fit <- lmer.step(lmer.MGE_grand_fit)
+
+r.squaredGLMM(lmer.MGE_grand_fit)
+r.squaredGLMM(lmer.MGE_best_fit)
+extractAIC(lmer.MGE_grand_fit)
+extractAIC(lmer.MGE_best_fit)
+
+summary(lmer.MGE_best_fit)
+residuals(lmer.MGE_best_fit)[abs(residuals(lmer.MGE_best_fit)) >= 50]
+ranef(lmer.MGE_best_fit)
+plot(x = df$MGE, 
+     y = round(fitted(lmer.MGE_best_fit)),
+     main = "MGE Richness",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
+
+#For control, use assigned probe as random variable
+lmer.coloc_grand_fit_2 <- lmer(Unique_Coloc ~ Probe 
+                             * SampleType 
+                             * Chemistry 
+                             * Total_Read_Length
+                             + (SampleType:Chemistry | Random2),
+                             data=df)
+lmer.coloc_best_fit_2 <- lmer.step(lmer.coloc_grand_fit_2)
+
+r.squaredGLMM(lmer.coloc_grand_fit_2)
+r.squaredGLMM(lmer.coloc_best_fit_2)
+extractAIC(lmer.coloc_grand_fit_2)
+extractAIC(lmer.coloc_best_fit_2)
+
+summary(lmer.coloc_best_fit_2)
+residuals(lmer.coloc_best_fit_2)[abs(residuals(lmer.coloc_best_fit_2)) >= .5]
+ranef(lmer.coloc_best_fit_2)
+plot(x = df$Unique_Coloc, 
+     y = round(fitted(lmer.coloc_best_fit_2)),
+     main = "Unique Colocalization",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
+
+lmer.read_grand_fit_2 <- lmer(Read_Count ~ Probe 
+                            * SampleType 
+                            * Chemistry 
+                            + (Probe:SampleType | Random),
+                            data=df)
+lmer.read_best_fit_2 <- lmer.step(lmer.read_grand_fit_2)
+
+r.squaredGLMM(lmer.read_grand_fit_2)
+r.squaredGLMM(lmer.read_best_fit_2)
+extractAIC(lmer.read_grand_fit_2)
+extractAIC(lmer.read_best_fit_2)
+
+summary(lmer.read_best_fit_2)
+residuals(lmer.read_best_fit_2)[abs(residuals(lmer.read_best_fit_2)) >= 50000]
+ranef(lmer.read_best_fit_2)
+plot(x = df$Read_Count, 
+     y = round(fitted(lmer.read_best_fit_2)),
+     main = "Total Reads",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
+
+lmer.ARG_grand_fit_2 <- lmer(ARG ~ Probe 
+                           * SampleType 
+                           * Chemistry 
+                           * Total_Read_Length
+                           + (Probe:SampleType | Random),
+                           data=df)
+lmer.ARG_best_fit_2 <- lmer.step(lmer.ARG_grand_fit_2)
+
+r.squaredGLMM(lmer.ARG_grand_fit_2)
+r.squaredGLMM(lmer.ARG_best_fit_2)
+extractAIC(lmer.ARG_grand_fit_2)
+extractAIC(lmer.ARG_best_fit_2)
+
+summary(lmer.ARG_best_fit_2)
+residuals(lmer.ARG_best_fit_2)[abs(residuals(lmer.ARG_best_fit_2)) >= 5]
+ranef(lmer.ARG_best_fit_2)
+plot(x = df$ARG, 
+     y = round(fitted(lmer.ARG_best_fit_2)),
+     main = "ARG Richness",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
+
+lmer.MGE_grand_fit_2 <- lmer(MGE ~ Probe 
+                           * SampleType 
+                           * Chemistry 
+                           * Total_Read_Length
+                           + (Probe:SampleType | Random),
+                           data=df)
+lmer.MGE_best_fit_2 <- lmer.step(lmer.MGE_grand_fit_2)
+
+r.squaredGLMM(lmer.MGE_grand_fit_2)
+r.squaredGLMM(lmer.MGE_best_fit_2)
+extractAIC(lmer.MGE_grand_fit_2)
+extractAIC(lmer.MGE_best_fit_2)
+
+summary(lmer.MGE_best_fit_2)
+residuals(lmer.MGE_best_fit_2)[abs(residuals(lmer.MGE_best_fit_2)) >= 50]
+ranef(lmer.MGE_best_fit_2)
+plot(x = df$MGE, 
+     y = round(fitted(lmer.MGE_best_fit_2)),
+     main = "MGE Richness",
+     xlab = "Original Values",
+     ylab = "Fitted Values")
