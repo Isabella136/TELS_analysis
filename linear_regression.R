@@ -17,23 +17,23 @@ library(MuMIn)
 library(dplyr)
 
 #Creating data frame of results
-sample_count = 96
-df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC","BFV2MA","BFV2MB","BFV2MC","BFV2NEGA","BFV2NEGAM","BFV2NEGM",
-                        "BFXTAA","BFXTAB","BFXTAC","BFXTAMA","BFXTAMB","BFXTAMC","BFXTMA","BFXTMB","BFXTMC",'BFXTNEGA',"BFXTNEGAM","BFXTNEGM",
-                        "HFV2AA","HFV2AB","HFV2AC","HFV2AMA","HFV2AMB","HFV2AMC","HFV2MA","HFV2MB","HFV2MC","HFV2NEGA","HFV2NEGAM","HFV2NEGM",
-                        "HFXTAA","HFXTAB","HFXTAC","HFXTAMA","HFXTAMB","HFXTAMC","HFXTMA","HFXTMB","HFXTMC","HFXTNEGA","HFXTNEGAM","HFXTNEGM",
-                        "MOV2AA","MOV2AB","MOV2AC","MOV2AMA","MOV2AMB","MOV2AMC","MOV2MA","MOV2MB","MOV2MC","MOV2NEGA","MOV2NEGAM","MOV2NEGM",
-                        "MOXTAA","MOXTAB","MOXTAC","MOXTAMA","MOXTAMB","MOXTAMC","MOXTMA","MOXTMB","MOXTMC","MOXTNEGA",'MOXTNEGAM',"MOXTNEGM",
-                        "SV2AA","SV2AB","SV2AC","SV2AMA","SV2AMB","SV2AMC","SV2MA","SV2MB","SV2MC","SV2NEGA","SV2NEGAM","SV2NEGM",
-                        "SXTAA","SXTAB","SXTAC","SXTAMA","SXTAMB","SXTAMC","SXTMA","SXTMB","SXTMC","SXTNEGA","SXTNEGAM","SXTNEGM"),
-              SampleID=c("BFV2A","BFV2A","BFV2A","BFV2AM","BFV2AM","BFV2AM","BFV2M","BFV2M","BFV2M","BFV2NEG","BFV2NEG","BFV2NEG",
-                         "BFXTA","BFXTA","BFXTA","BFXTAM","BFXTAM","BFXTAM","BFXTM","BFXTM","BFXTM",'BFXTNEG',"BFXTNEG","BFXTNEG",
-                         "HFV2A","HFV2A","HFV2A","HFV2AM","HFV2AM","HFV2AM","HFV2M","HFV2M","HFV2M","HFV2NEG","HFV2NEG","HFV2NEG",
-                         "HFXTA","HFXTA","HFXTA","HFXTAM","HFXTAM","HFXTAM","HFXTM","HFXTM","HFXTM","HFXTNEG","HFXTNEG","HFXTNEG",
-                         "MOV2A","MOV2A","MOV2A","MOV2AM","MOV2AM","MOV2AM","MOV2M","MOV2M","MOV2M","MOV2NEG","MOV2NEG","MOV2NEG",
-                         "MOXTA","MOXTA","MOXTA","MOXTAM","MOXTAM","MOXTAM","MOXTM","MOXTM","MOXTM","MOXTNEG",'MOXTNEG',"MOXTNEG",
-                         "SV2A","SV2A","SV2A","SV2AM","SV2AM","SV2AM","SV2M","SV2M","SV2M","SV2NEG","SV2NEG","SV2NEG",
-                         "SXTA","SXTA","SXTA","SXTAM","SXTAM","SXTAM","SXTM","SXTM","SXTM","SXTNEG","SXTNEG","SXTNEG"),
+sample_count = 72
+df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC","BFV2MA","BFV2MB","BFV2MC",
+                        "BFXTAA","BFXTAB","BFXTAC","BFXTAMA","BFXTAMB","BFXTAMC","BFXTMA","BFXTMB","BFXTMC",
+                        "HFV2AA","HFV2AB","HFV2AC","HFV2AMA","HFV2AMB","HFV2AMC","HFV2MA","HFV2MB","HFV2MC",
+                        "HFXTAA","HFXTAB","HFXTAC","HFXTAMA","HFXTAMB","HFXTAMC","HFXTMA","HFXTMB","HFXTMC",
+                        "MOV2AA","MOV2AB","MOV2AC","MOV2AMA","MOV2AMB","MOV2AMC","MOV2MA","MOV2MB","MOV2MC",
+                        "MOXTAA","MOXTAB","MOXTAC","MOXTAMA","MOXTAMB","MOXTAMC","MOXTMA","MOXTMB","MOXTMC",
+                        "SV2AA","SV2AB","SV2AC","SV2AMA","SV2AMB","SV2AMC","SV2MA","SV2MB","SV2MC",
+                        "SXTAA","SXTAB","SXTAC","SXTAMA","SXTAMB","SXTAMC","SXTMA","SXTMB","SXTMC"),
+              SampleID=c("BFV2A","BFV2A","BFV2A","BFV2AM","BFV2AM","BFV2AM","BFV2M","BFV2M","BFV2M",
+                         "BFXTA","BFXTA","BFXTA","BFXTAM","BFXTAM","BFXTAM","BFXTM","BFXTM","BFXTM",
+                         "HFV2A","HFV2A","HFV2A","HFV2AM","HFV2AM","HFV2AM","HFV2M","HFV2M","HFV2M",
+                         "HFXTA","HFXTA","HFXTA","HFXTAM","HFXTAM","HFXTAM","HFXTM","HFXTM","HFXTM",
+                         "MOV2A","MOV2A","MOV2A","MOV2AM","MOV2AM","MOV2AM","MOV2M","MOV2M","MOV2M",
+                         "MOXTA","MOXTA","MOXTA","MOXTAM","MOXTAM","MOXTAM","MOXTM","MOXTM","MOXTM",
+                         "SV2A","SV2A","SV2A","SV2AM","SV2AM","SV2AM","SV2M","SV2M","SV2M",
+                         "SXTA","SXTA","SXTA","SXTAM","SXTAM","SXTAM","SXTM","SXTM","SXTM"),
               Chemistry = integer(sample_count),
               SampleType = integer(sample_count),
               Probe = integer(sample_count),
@@ -52,7 +52,7 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
 ref_length <- read.csv(
   "~/Documents/GitHub/TELS_analysis/output/references_length.csv", header=FALSE)
 for (i in 1:sample_count) {
-  if ((i-1)%%(sample_count/4) > 11) df$Chemistry[i] <- 'XT'
+  if ((i-1)%%(sample_count/4) > 8) df$Chemistry[i] <- 'XT'
   else  df$Chemistry[i] <- 'V2'
   
   if ((i-1)%/%(sample_count/4) == 0) df$SampleType[i] <- 'Bovine'
@@ -67,13 +67,6 @@ for (i in 1:sample_count) {
   if ((i-1)%%(sample_count/8) < 3) df$Probe[i] <- 'ARG'
   else if ((i-1)%%(sample_count/8) < 6) df$Probe[i] <- 'ARG-MGE'
   else if ((i-1)%%(sample_count/8) < 9) df$Probe[i] <- 'MGE'
-  else {
-    df$Probe[i] <- 'None'
-    if ((i-1)%%12 == 9) df$Random[i] <- 'A'
-    else if ((i-1)%%12 == 10) df$Random[i] <- 'B'
-    else if ((i-1)%%12 == 11) df$Random[i] <- 'C'
-    df$Chemistry[i] <- 'None'
-  }  
   
   colocalizations_richness <- read.csv(
     paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
