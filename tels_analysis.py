@@ -51,23 +51,23 @@ config.read(configFile)
 if not os.path.exists(outputFolder + "/"):
 	os.makedirs(outputFolder + "/")
 
-megares_full_reference_length(config['SOURCE_FILE']['MEGARES_FASTA'], outputFolder + "/references_length.csv")
-mge_lock = multiprocessing.Lock()
-mp = list()
-for sample_name in fileList:
-	mp.append(multiprocessing.Process(target=mge_full_reference_length, args=(sample_name, 
-																			  config['SOURCE_FILE']['SOURCE_PREFIX'],
-																			  config['SOURCE_FILE']['SOURCE_SUFFIX'],
-																			  config['SOURCE_EXTENSION']['OVERLAP_OUTPUT'],
-																			  config['SOURCE_FILE']['ACLAME_FASTA'],
-																			  config['SOURCE_FILE']['ICEBERG_FASTA'],
-																			  config['SOURCE_FILE']['PLASMID_FINDER_FASTA'],
-																			  outputFolder + "/references_length.csv",
-																			  mge_lock)))
-for process in mp:
-	process.start()
-for process in mp:
-	process.join()
+# megares_full_reference_length(config['SOURCE_FILE']['MEGARES_FASTA'], outputFolder + "/references_length.csv")
+# mge_lock = multiprocessing.Lock()
+# mp = list()
+# for sample_name in fileList:
+# 	mp.append(multiprocessing.Process(target=mge_full_reference_length, args=(sample_name, 
+# 																			  config['SOURCE_FILE']['SOURCE_PREFIX'],
+# 																			  config['SOURCE_FILE']['SOURCE_SUFFIX'],
+# 																			  config['SOURCE_EXTENSION']['OVERLAP_OUTPUT'],
+# 																			  config['SOURCE_FILE']['ACLAME_FASTA'],
+# 																			  config['SOURCE_FILE']['ICEBERG_FASTA'],
+# 																			  config['SOURCE_FILE']['PLASMID_FINDER_FASTA'],
+# 																			  outputFolder + "/references_length.csv",
+# 																			  mge_lock)))
+# for process in mp:
+# 	process.start()
+# for process in mp:
+# 	process.join()
 
 #if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
 #	for fileName in fileList:
@@ -150,8 +150,9 @@ if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
 													   config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
 	for fileName in fileList:
-		crAnalyzer.analyzeFile(fileName, outputFolder + "/ARG_composition", outputFolder + "/MGE_composition", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
+		crAnalyzer.analyzeFile(fileName)
 	crAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS"))
+	crAnalyzer.makeBarCharts(outputFolder + "/ARG_composition_new", outputFolder + "/MGE_composition_new", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
 
 if config.getboolean("STEPS", "HEATMAP"):
 	heatmapAnalyzer = heatmap_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 

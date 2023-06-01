@@ -7,8 +7,9 @@ import numpy
 class indiv_composition:
     def __init__(this, fileName, mge_dict):
         this.name = fileName
+        this.fileName = fileName[:(-2 if 'NEGAM' in fileName else -1)]
         this.sample, this.seqPlatform = fileDict(fileName)
-        this.arg_composition_data = [0,0,0,0] #in order: drug, metal, multi-compound, and biocide
+        this.arg_composition_data = [0,0,0,0] #in order: drug, metal, biocide, and multi-compound
         this.arg_class_richness = 0
         this.arg_mechanism_richness = 0
         this.arg_group_richness = 0
@@ -24,11 +25,14 @@ class indiv_composition:
         toReturn = toReturn + ',' + str(this.arg_group_richness)
         toReturn = toReturn + ',,' + str(this.mge_richness)
         return toReturn
+    
+    def getComposition(this):
+        return [this.fileName, this.arg_composition_data, this.mge_composition_data]
 
-    def findAllData(this, filepath_ARG_composition, filepath_MGE, filepath_arg_output, filepath_mge_output):
+
+    def findAllData(this, filepath_ARG_composition, filepath_MGE):
         this.findARGComposition(filepath_ARG_composition)
         this.findMGEComposition(filepath_MGE)
-        this.makePieChart(filepath_arg_output, filepath_mge_output)
 
     def findARGComposition(this, filepath):
         arg_composition_file = open(filepath, "r")
@@ -45,9 +49,9 @@ class indiv_composition:
                 this.arg_composition_data[0] += 1
             elif arg_header[1] == "Metals":
                 this.arg_composition_data[1] += 1
-            elif arg_header[1] == "Multi-compound":
+            elif arg_header[1] == "Biocides":
                 this.arg_composition_data[2] += 1
-            else: #arg_type == "Biocides"
+            else: #arg_type == "Multi"
                 this.arg_composition_data[3] += 1
             if classList.count(arg_header[2]) == 0:
                 classList.append(arg_header[2])
