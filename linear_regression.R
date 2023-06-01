@@ -131,11 +131,17 @@ extractAIC(lmer.coloc_best_fit)
 
 summary(lmer.coloc_best_fit)
 ranef(lmer.coloc_best_fit)
+op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$Unique_Coloc, 
      y = round(fitted(lmer.coloc_best_fit)),
      main = "Unique Colocalization",
      xlab = "Original Values",
-     ylab = "Fitted Values")
+     ylab = " ",
+     xlim = c(-5, 50),
+     ylim = c(-5, 50),
+     las = 1)
+title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
+par(op)
 
 lmer.read_grand_fit <- lmer(Read_Count ~ Probe 
                             * SampleType 
@@ -151,11 +157,17 @@ extractAIC(lmer.read_best_fit)
 
 summary(lmer.read_best_fit)
 ranef(lmer.read_best_fit)
+op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$Read_Count, 
      y = round(fitted(lmer.read_best_fit)),
      main = "Total Reads",
      xlab = "Original Values",
-     ylab = "Fitted Values")
+     ylab = " ",
+     xlim = c(0, 800000),
+     ylim = c(0, 800000),
+     las = 1)
+title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
+par(op)
 
 lmer.ARG_grand_fit <- lmer(ARG ~ Probe 
                             * SampleType 
@@ -172,11 +184,18 @@ extractAIC(lmer.ARG_best_fit)
 
 summary(lmer.ARG_best_fit)
 ranef(lmer.ARG_best_fit)
+vcov(lmer.ARG_best_fit)
+op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$ARG, 
      y = round(fitted(lmer.ARG_best_fit)),
      main = "ARG Richness",
      xlab = "Original Values",
-     ylab = "Fitted Values")
+     ylab = " ",
+     xlim = c(0, 120000),
+     ylim = c(0, 120000),
+     las = 1)
+title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
+par(op)
 
 lmer.MGE_grand_fit <- lmer(MGE ~ Probe 
                            * SampleType 
@@ -193,11 +212,17 @@ extractAIC(lmer.MGE_best_fit)
 
 summary(lmer.MGE_best_fit)
 ranef(lmer.MGE_best_fit)
+op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$MGE, 
      y = round(fitted(lmer.MGE_best_fit)),
      main = "MGE Richness",
      xlab = "Original Values",
-     ylab = "Fitted Values")
+     ylab = " ",
+     xlim = c(0, 120000),
+     ylim = c(0, 120000),
+     las = 1)
+title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
+par(op)
 
 results <- data.frame(best_fit=c(as.character(lmer.coloc_best_fit@call[["formula"]])[[3]],
                                  as.character(lmer.read_best_fit@call[["formula"]])[[3]],
