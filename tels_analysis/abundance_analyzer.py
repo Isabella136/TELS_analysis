@@ -34,15 +34,19 @@ class abundance_analyzer:
                 for x_axis_name in this.abundance_dict[sample]:
                     this.abundance_dict[sample][x_axis_name].makeAbundanceRelative(this.initial_source_size[sample][x_axis_name], this.genes_length)
         makeAbundanceRelative()
-        fig, axs = pyplot.subplots(1,4,figsize=(70, 25),sharey="row")
-        fig.suptitle("ARG Relative Abundance", fontsize=50)
+        fig, axs = pyplot.subplots(2,2,figsize=(70, 70),sharey="row")
+        fig.suptitle("ARG Relative Abundance", fontsize=70)
         fig.add_subplot(111, frame_on=False)
+        
         pyplot.tick_params(labelcolor="none", bottom=False, left=False)
-        pyplot.ylabel("Log Relative Abundance",size=40)
+        for ax in axs.flat:
+            ax.set_ylabel ("Log Relative Abundance", fontsize=55)
+            ax.label_outer()
+            ax.set_ylim(-4,6)
         paletteList = ["PuRd", "YlOrBr", "BuGn", "Greys"]
         i = 0
         for sample in this.abundance_dict:
-            pyplot.sca(axs[i])
+            pyplot.sca(axs[i // 2, i % 2])
             x_axis_list = []
             abundance_list = {}
             for x_axis_name in this.abundance_dict[sample]:
@@ -51,11 +55,11 @@ class abundance_analyzer:
             df = pandas.DataFrame.from_dict(abundance_list)
             seaborn.set_style("whitegrid")
             seaborn.set_context("paper")
-            axs[i] = seaborn.violinplot(data=df, inner="box", palette=paletteList[i])
-            axs[i].set_title(sample, fontsize=40)
-            axs[i].set_xticklabels(labels=x_axis_list,fontsize=20,rotation=90)
-            if i == 0:
-                pyplot.yticks(fontsize=20)
+            axs[i // 2, i % 2] = seaborn.violinplot(data=df, inner="box", palette=paletteList[i])
+            axs[i // 2, i % 2].set_title(sample, fontsize=60)
+            axs[i // 2, i % 2].set_xticklabels(labels=x_axis_list,fontsize=40,rotation=90)
+            if i % 2 == 0:
+                pyplot.yticks(fontsize=40)
             i+=1
         if not(os.path.exists(outputFolder)):
             os.makedirs(outputFolder)
