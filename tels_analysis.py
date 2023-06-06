@@ -1,18 +1,25 @@
-import configparser
-import multiprocessing
-#from tels_analysis.colocalization_analyzer import colocalization_analyzer
-from tels_analysis.heatmap_analyzer import heatmap_analyzer
-from tels_analysis.statistical_analyzer import statistical_analyzer
-from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
-from tels_analysis.abundance_analyzer import abundance_analyzer
 from tels_analysis.stacked_abundance_analyzer import stacked_abundance_analyzer
+from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
+#from tels_analysis.colocalization_analyzer import colocalization_analyzer
+from tels_analysis.linear_regression import megares_full_reference_length
+from tels_analysis.linear_regression import mge_full_reference_length
+from tels_analysis.statistical_analyzer import statistical_analyzer
+from tels_analysis.abundance_analyzer import abundance_analyzer
+from tels_analysis.heatmap_analyzer import heatmap_analyzer
+from tels_analysis.matrix_creator import matrix_creator
+from tels_analysis.special_coloc import special_coloc
 from tels_analysis.venn_analyzer import venn_analyzer
 from tels_analysis.special import special
-from tels_analysis.special_coloc import special_coloc
-from tels_analysis.linear_regression import megares_full_reference_length, mge_full_reference_length
-import sys, getopt, gzip, shutil, os
+import multiprocessing
+import configparser
+import getopt
+import shutil
+import gzip
+import sys
+import os
 
-fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
+
+file_list = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
 			"BFV2MA",		"BFV2MB",		"BFV2MC",		"BFV2NEGA",		"BFV2NEGAM",	"BFV2NEGM",		
 			"BFXTAA",		"BFXTAB",		"BFXTAC",		"BFXTAMA",		"BFXTAMB",		"BFXTAMC",
 			"BFXTMA",		"BFXTMB",		"BFXTMC",		"BFXTNEGA",		"BFXTNEGAM",	"BFXTNEGM", 
@@ -29,104 +36,76 @@ fileList = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
 			"SXTAA",		"SXTAB", 		"SXTAC",		"SXTAMA",		"SXTAMB",		"SXTAMC",
 			"SXTMA",		"SXTMB",		"SXTMC",		"SXTNEGA",		"SXTNEGAM",		"SXTNEGM"]
 
-outputFolder = "output"
-configFile = "config.ini"
+output_folder = "output"
+config_file = "config.ini"
 try:
     options, args = getopt.getopt(sys.argv[1:], "hc:o:")
 except getopt.GetoptError:
-    print("tels_analysis.py -c <configFile> -o <outputFolder>")
+    print("tels_analysis.py -c <config_file> -o <output_folder>")
     sys.exit(-1)
 for opt, arg in options:
     if opt == "-h":
         print("List of arguments:\n\n\n-c: config file\n-h: help\n-o: output folder\n")
         sys.exit()
     elif opt == "-c":
-        configFile = arg
+        config_file = arg
     elif opt == "-o":
-        outputFolder = arg
+        output_folder = arg
 
 config = configparser.ConfigParser()
-config.read(configFile)
+config.read(config_file)
 
-if not os.path.exists(outputFolder + "/"):
-	os.makedirs(outputFolder + "/")
+if not os.path.exists(output_folder + "/"):
+	os.makedirs(output_folder + "/")
 
-# megares_full_reference_length(config['SOURCE_FILE']['MEGARES_FASTA'], outputFolder + "/references_length.csv")
-# mge_lock = multiprocessing.Lock()
-# mp = list()
-# for sample_name in fileList:
-# 	mp.append(multiprocessing.Process(target=mge_full_reference_length, args=(sample_name, 
-# 																			  config['SOURCE_FILE']['SOURCE_PREFIX'],
-# 																			  config['SOURCE_FILE']['SOURCE_SUFFIX'],
-# 																			  config['SOURCE_EXTENSION']['OVERLAP_OUTPUT'],
-# 																			  config['SOURCE_FILE']['ACLAME_FASTA'],
-# 																			  config['SOURCE_FILE']['ICEBERG_FASTA'],
-# 																			  config['SOURCE_FILE']['PLASMID_FINDER_FASTA'],
-# 																			  outputFolder + "/references_length.csv",
-# 																			  mge_lock)))
-# for process in mp:
-# 	process.start()
-# for process in mp:
-# 	process.join()
+# Retrieving all constants from config
+MEGARES_DB = config.get("SOURCE_FILE", "MEGARES_FASTA")
+VENN_EXTENSION = config.get("OUTPUT_EXTENSION", "VENN")
+MEGARES_ANNOTATION = config.get("SOURCE_FILE", "MEGARES")
+STATS_EXTENSION = config.get("OUTPUT_EXTENSION", "STATS")
+SOURCE_PREFIX = config.get("SOURCE_FILE", "SOURCE_PREFIX")
+SOURCE_SUFFIX = config.get("SOURCE_FILE", "SOURCE_SUFFIX")
+VIOLIN_EXTENSION = config.get("OUTPUT_EXTENSION", "VIOLIN")
+STACKED_EXTENSION = config.get("OUTPUT_EXTENSION", "STACKED")
+HEATMAP_EXTENSION = config.get("OUTPUT_EXTENSION", "HEATMAP")
+FILE_SIZE_EXTENSION = config.get("OUTPUT_EXTENSION", "FILE_SIZE")
+SHORT_MGE_EXTENSION = config.get("SOURCE_EXTENSION", "SHORT_MGE")
+AMR_MATRIX_EXTENSION = config.get("OUTPUT_EXTENSION", "AMR_MATRIX")
+MGE_MATRIX_EXTENSION = config.get("OUTPUT_EXTENSION", "MGE_MATRIX")
+MGE_CLASSIFICATION = config.get("SOURCE_FILE", "MGE_CLASSIFICATION")
+SHORT_AMR_DIV_EXTENSION = config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV")
+INDIV_COMPOS_CHART_EXTENSION = config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART")
+STATISTICAL_ANALYSIS_EXTENSION = config.get("OUTPUT_EXTENSION", "STATISTICAL_ANALYSIS")
+COMPOS_RICHNESS_ANALYSIS_EXTENSION = config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS")
 
-#if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
-#	for fileName in fileList:
-#		colocalizationAnalyzer = colocalization_analyzer(fileName, config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-#													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-#													   config.get("SOURCE_EXTENSION", "COLOCALIZATIONS"), 
-#													   config.get("SOURCE_EXTENSION", "READS_LENGTH"))
-#		colocalizationAnalyzer.makeChart( fileName, outputFolder + "/" + 
-#									  config.get("OUTPUT_FILE", "OUTPUT_PREFIX"), 
-#									  config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"), 
-#									  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
-
-if config.getboolean("STEPS", "SPECIAL"):
-	mgeInfo = special(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
-									"AlignedToMegares.csv",
-									config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
-									config.get("SOURCE_EXTENSION", "SHORT_MGE"),
-									config.get("SOURCE_EXTENSION", "OVERLAP_OUTPUT"),
-									config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
-	colocInfo = special_coloc(config.get("SOURCE_FILE", "SOURCE_PREFIX"),
-									"AlignedToMegares.csv",
-									config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
-									config.get("SOURCE_EXTENSION", "COLOCALIZATIONS_RICHNESS"))
-	for fileName in fileList:
-		mgeInfo.addToMobilomeInfo(fileName)
-		colocInfo.addColocInfo(fileName)
-	mgeInfo.writeMobilomeInfo(outputFolder + "/mobilome_info.csv")
-	mgeInfo.addComparisonInfo()
-	mgeInfo.writeComparisonMobilomeInfo(outputFolder + "/comparison_mobilome_info.csv")
-	mgeInfo.findInOverlapOutput(outputFolder + "/comparison_with_other_samples.csv")
-	colocInfo.writeColocInfo(outputFolder + "/coloc_info.csv")
 
 if config.getboolean("STEPS", "STATS"):
-	SOURCE_PREFIX = config.get("SOURCE_FILE", "SOURCE_PREFIX")
-	SOURCE_SUFFIX = config.get("SOURCE_FILE", "SOURCE_SUFFIX")
-	STATS_EXTENSION = config.get("OUTPUT_EXTENSION", "STATS")
-	def calculateStats(fileName):
-		statsFileOutput = SOURCE_PREFIX + fileName + SOURCE_SUFFIX + STATS_EXTENSION
-		if not(os.path.exists(statsFileOutput)):
-			readListSource = SOURCE_PREFIX + fileName + SOURCE_SUFFIX
-			inputFile = open(readListSource, "r")
-			lineNum = 0
-			for line in inputFile:
-				lineNum += 1
-			inputFile.close()
-			readListSource = SOURCE_PREFIX + fileName + ".ccs.fastq"
-			dupFile = open(readListSource, "r")
-			dupLineNum = 0
-			for line in dupFile:
-				dupLineNum += 1
-			dupFile.close()
-			outputFile = open(statsFileOutput, "w")
-			outputFile.write("DUPLICATED_STATS_NUM_OF_READS," + str(int(dupLineNum/4)))
-			outputFile.write("\n")
-			outputFile.write("DEDUPLICATED_STATS_NUM_OF_READS," + str(int(lineNum/4)))
-			outputFile.close()
+	def calculate_stats(file_name):
+		stats_file_output = SOURCE_PREFIX + file_name + SOURCE_SUFFIX + STATS_EXTENSION
+		if not(os.path.exists(stats_file_output)):
+			# Count dedup reads
+			read_list_source = SOURCE_PREFIX + file_name + SOURCE_SUFFIX
+			input_file = open(read_list_source, "r")
+			line_num = 0
+			for line in input_file: line_num += 1
+			input_file.close()
+
+			# Count dup reads
+			read_list_source = SOURCE_PREFIX + file_name + ".ccs.fastq"
+			dup_file = open(read_list_source, "r")
+			dupline_num = 0
+			for line in dup_file: dupline_num += 1
+			dup_file.close()
+
+			output_file = open(stats_file_output, "w")
+			output_file.write("DUPLICATED_STATS_NUM_OF_READS," + str(int(dupline_num/4)))
+			output_file.write("\n")
+			output_file.write("DEDUPLICATED_STATS_NUM_OF_READS," + str(int(line_num/4)))
+			output_file.close()
+
 	process = []
-	for fileName in fileList:
-		process.append(multiprocessing.Process(target=calculateStats, args=(fileName,)))
+	for file_name in file_list:
+		process.append(multiprocessing.Process(target=calculate_stats, args=(file_name,)))
 	for i in range(0, 96, 8):
 		for t in process[i:i+8]:
 			t.start()
@@ -134,68 +113,136 @@ if config.getboolean("STEPS", "STATS"):
 			t.join()
 
 if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
-	statisticalAnalyzer = statistical_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
-													   config.get("OUTPUT_EXTENSION", "STATS"))
-	for fileName in fileList:
-		statisticalAnalyzer.analyzeFile(fileName)
-	statisticalAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "STATISTICAL_ANALYSIS"))
+	stats_analyzer_object = statistical_analyzer(SOURCE_PREFIX,
+												 SOURCE_SUFFIX,
+												 SHORT_AMR_DIV_EXTENSION,
+												 SHORT_MGE_EXTENSION,
+												 STATS_EXTENSION)
+	
+	for file_name in file_list:
+		stats_analyzer_object.analyzeFile(file_name)
+
+	stats_analyzer_object.printAnalysis(output_folder, STATISTICAL_ANALYSIS_EXTENSION)
 
 if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
-	crAnalyzer = compos_richness_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
-													   config.get("SOURCE_FILE", "MGE_CLASSIFICATION"))
-	for fileName in fileList:
-		crAnalyzer.analyzeFile(fileName)
-	crAnalyzer.printAnalysis(outputFolder, config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS"))
-	crAnalyzer.makeBarCharts(outputFolder + "/ARG_composition_new", outputFolder + "/MGE_composition_new", config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART"))
+	crAnalyzer = compos_richness_analyzer(SOURCE_PREFIX, 
+				       					  SOURCE_SUFFIX, 
+										  SHORT_AMR_DIV_EXTENSION, 
+										  SHORT_MGE_EXTENSION,
+										  MGE_CLASSIFICATION)
+	
+	for file_name in file_list:
+		crAnalyzer.analyzeFile(file_name)
+	crAnalyzer.printAnalysis(output_folder, COMPOS_RICHNESS_ANALYSIS_EXTENSION)
+
+	crAnalyzer.makeBarCharts(output_folder + "/ARG_composition_new", 
+			  				 output_folder + "/MGE_composition_new", 
+							 INDIV_COMPOS_CHART_EXTENSION)
 
 if config.getboolean("STEPS", "HEATMAP"):
-	heatmapAnalyzer = heatmap_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
-													   config.get("SOURCE_FILE", "MEGARES"))
-	for fileName in fileList:
-		heatmapAnalyzer.addToMaps(fileName)
-	heatmapAnalyzer.makeMaps(outputFolder + "/ARG_heatmap", config.get("OUTPUT_EXTENSION", "HEATMAP"))
+	heatmapAnalyzer = heatmap_analyzer(SOURCE_PREFIX,
+				    			   	   SOURCE_SUFFIX,
+									   SHORT_AMR_DIV_EXTENSION,
+									   SHORT_MGE_EXTENSION,
+									   MEGARES_ANNOTATION)
+	for file_name in file_list:
+		heatmapAnalyzer.addToMaps(file_name)
+	heatmapAnalyzer.makeMaps(output_folder + "/ARG_heatmap", HEATMAP_EXTENSION)
 
 if config.getboolean("STEPS", "FILE_SIZE"):
-	fileOfSizes = open(outputFolder + "/" + config.get("OUTPUT_EXTENSION", "FILE_SIZE"), "w")
-	for fileName in fileList:
-		fileOfSizes.write(fileName + "," + str(os.stat(config.get("SOURCE_FILE", "SOURCE_PREFIX") + fileName + config.get("SOURCE_FILE", "SOURCE_SUFFIX")).st_size) + ",\n")
+	fileOfSizes = open(output_folder + "/" + FILE_SIZE_EXTENSION, "w")
+	for file_name in file_list:
+		size = str(os.stat(SOURCE_PREFIX + file_name + SOURCE_SUFFIX).st_size)
+		fileOfSizes.write(file_name + "," + size + "\n")
 	fileOfSizes.close()
 
 if config.getboolean("STEPS", "VIOLIN"):
-	abundanceAnalyzer = abundance_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"), 
-													   outputFolder + "/" + config.get("OUTPUT_EXTENSION", "FILE_SIZE"),
-													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
-													   config.get("SOURCE_FILE", "MEGARES_FASTA"))
-	for fileName in fileList:
-		abundanceAnalyzer.findAbsoluteAbundance(fileName)
-	abundanceAnalyzer.makeViolinPlot(outputFolder, config.get("OUTPUT_EXTENSION", "VIOLIN"))
+	abundanceAnalyzer = abundance_analyzer(SOURCE_PREFIX, 
+										   SOURCE_SUFFIX, 
+										   output_folder + "/" + FILE_SIZE_EXTENSION,
+										   SHORT_AMR_DIV_EXTENSION, 
+										   SHORT_MGE_EXTENSION,
+										   MEGARES_DB)
+	for file_name in file_list:
+		abundanceAnalyzer.findAbsoluteAbundance(file_name)
+	abundanceAnalyzer.makeViolinPlot(output_folder, VIOLIN_EXTENSION)
 
 if config.getboolean("STEPS", "STACKED"):
-	stackedAnalyzer = stacked_abundance_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
-													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_MGE"),
-													   config.get("OUTPUT_EXTENSION", "STATS"))
-	for fileName in fileList:
-		stackedAnalyzer.findAbsoluteAbundance(fileName)
-	stackedAnalyzer.makeStack(outputFolder, config.get("OUTPUT_EXTENSION", "STACKED"))
+	stackedAnalyzer = stacked_abundance_analyzer(SOURCE_PREFIX, 
+												 SOURCE_SUFFIX,
+												 SHORT_AMR_DIV_EXTENSION,
+												 SHORT_MGE_EXTENSION,
+												 STATS_EXTENSION)
+	for file_name in file_list:
+		stackedAnalyzer.findAbsoluteAbundance(file_name)
+	stackedAnalyzer.makeStack(output_folder, STACKED_EXTENSION)
 
 if config.getboolean("STEPS", "VENN"):
-	vennAnalyzer = venn_analyzer(config.get("SOURCE_FILE", "SOURCE_PREFIX"), 
-													   config.get("SOURCE_FILE", "SOURCE_SUFFIX"),
-													   config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV"), 
-													   config.get("SOURCE_EXTENSION", "SHORT_MGE"))
-	for fileName in fileList:
-		vennAnalyzer.addToCount(fileName)
-	vennAnalyzer.makeVenn(outputFolder, config.get("OUTPUT_EXTENSION", "VENN"))
+	vennAnalyzer = venn_analyzer(SOURCE_PREFIX, 
+								 SOURCE_SUFFIX,
+								 SHORT_AMR_DIV_EXTENSION, 
+								 SHORT_MGE_EXTENSION)
+	for file_name in file_list:
+		vennAnalyzer.addToCount(file_name)
+	vennAnalyzer.makeVenn(output_folder, VENN_EXTENSION)
+
+if config.getboolean("STEPS", "MATRIX"):
+	count_matrix = matrix_creator(SOURCE_PREFIX,
+			       				  SOURCE_SUFFIX,
+								  SHORT_AMR_DIV_EXTENSION,
+								  SHORT_MGE_EXTENSION)
+	
+	for file_name in file_list:
+		count_matrix.add_column(file_name)
+
+	count_matrix.print_matrix(output_folder, AMR_MATRIX_EXTENSION, MGE_MATRIX_EXTENSION)
+
+
+# megares_full_reference_length(config['SOURCE_FILE']['MEGARES_FASTA'], output_folder + "/references_length.csv")
+# mge_lock = multiprocessing.Lock()
+# mp = list()
+# for sample_name in file_list:
+# 	mp.append(multiprocessing.Process(target=mge_full_reference_length, args=(sample_name, 
+# 																			  config['SOURCE_FILE']['SOURCE_PREFIX'],
+# 																			  config['SOURCE_FILE']['SOURCE_SUFFIX'],
+# 																			  config['SOURCE_EXTENSION']['OVERLAP_OUTPUT'],
+# 																			  config['SOURCE_FILE']['ACLAME_FASTA'],
+# 																			  config['SOURCE_FILE']['ICEBERG_FASTA'],
+# 																			  config['SOURCE_FILE']['PLASMID_FINDER_FASTA'],
+# 																			  output_folder + "/references_length.csv",
+# 																			  mge_lock)))
+# for process in mp:
+# 	process.start()
+# for process in mp:
+# 	process.join()
+
+#if config.getboolean("STEPS", "COLOCALIZATION_ANALYSIS"):
+#	for file_name in file_list:
+#		colocalizationAnalyzer = colocalization_analyzer(file_name, SOURCE_PREFIX, 
+#													   SOURCE_SUFFIX, 
+#													   config.get("SOURCE_EXTENSION", "COLOCALIZATIONS"), 
+#													   config.get("SOURCE_EXTENSION", "READS_LENGTH"))
+#		colocalizationAnalyzer.makeChart( file_name, output_folder + "/" + 
+#									  config.get("OUTPUT_FILE", "OUTPUT_PREFIX"), 
+#									  config.get("OUTPUT_FILE", "OUTPUT_SUFFIX"), 
+#									  config.get("OUTPUT_EXTENSION", "COLOCALIZATION_ANALYSIS"))
+
+if config.getboolean("STEPS", "SPECIAL"):
+	mgeInfo = special(SOURCE_PREFIX,
+									"AlignedToMegares.csv",
+									SOURCE_SUFFIX,
+									SHORT_MGE_EXTENSION,
+									config.get("SOURCE_EXTENSION", "OVERLAP_OUTPUT"),
+									MGE_CLASSIFICATION)
+	colocInfo = special_coloc(SOURCE_PREFIX,
+									"AlignedToMegares.csv",
+									SOURCE_SUFFIX,
+									config.get("SOURCE_EXTENSION", "COLOCALIZATIONS_RICHNESS"))
+	for file_name in file_list:
+		mgeInfo.addToMobilomeInfo(file_name)
+		colocInfo.addColocInfo(file_name)
+	mgeInfo.writeMobilomeInfo(output_folder + "/mobilome_info.csv")
+	mgeInfo.addComparisonInfo()
+	mgeInfo.writeComparisonMobilomeInfo(output_folder + "/comparison_mobilome_info.csv")
+	mgeInfo.findInOverlapOutput(output_folder + "/comparison_with_other_samples.csv")
+	colocInfo.writeColocInfo(output_folder + "/coloc_info.csv")
