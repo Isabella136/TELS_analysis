@@ -4,15 +4,6 @@ temp_files/*
 *.pyc
 tels_analysis/.vs/*
 TELS_output/*
-MGEs_Classification/*.xlsx
-MGEs_Classification/TELS2_thershold_comparison/*
-MGEs_Classification/megares_mge_alignment/*
 *.csv#
-MGEs_Classification/ICEalignMatrix.csv
-MGEs_Classification/ICEalignSimilarities.csv
-MGEs_Classification/temp.csv
-MGEs_Classification/FASTA/aclame_db.fasta
-MGEs_Classification/FASTA/plasmid_finder_db.fasta
-MGEs_Classification/FASTA/iceberg_db.fasta
-MGEs_Classification/*
 old_output/*
+databases/aclame_db.fasta
