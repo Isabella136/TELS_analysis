@@ -1,3 +1,5 @@
+from Bio import SeqIO
+
 def fileDict(fileName):
     sample = ""
     seqPlatform = ""
@@ -119,19 +121,13 @@ def megares_analyzer(megaresFile):
     otherList = sortList(otherList)
     return (drugList, otherList)
 
-def getGenesLength(megaresFile):
-    megares = open(megaresFile, "r")
-    toReturn = {}
-    header = False
-    name = ""
-    for line in megares:
-        header = not(header)
-        if header: 
-            name = line.split('|')[0][1:]
-            continue
-        toReturn.update({name:len(line)})
-    megares.close()
-    return toReturn
+def get_genes_length(fasta_file):
+    gene_length_dict = dict()
+    with open(fasta_file, "r") as fasta:
+        fasta_reader = SeqIO.parse(fasta, 'fasta')
+        for reference in fasta_reader:
+            gene_length_dict.update({reference.id: len(reference.seq)})
+    return gene_length_dict
 
 def getSampleGroup(fileName):
     sub_table = ""

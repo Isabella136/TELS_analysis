@@ -4,7 +4,7 @@ from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
 from tels_analysis.linear_regression import megares_full_reference_length
 from tels_analysis.linear_regression import mge_full_reference_length
 from tels_analysis.statistical_analyzer import statistical_analyzer
-from tels_analysis.abundance_analyzer import abundance_analyzer
+from tels_analysis.abundance_analyzer import AbundanceAnalyzer
 from tels_analysis.heatmap_analyzer import heatmap_analyzer
 from tels_analysis.matrix_creator import matrix_creator
 from tels_analysis.special_coloc import special_coloc
@@ -59,29 +59,46 @@ if not os.path.exists(output_folder + "/"):
 	os.makedirs(output_folder + "/")
 
 # Retrieving all constants from config
-MEGARES_DB = config.get("SOURCE_FILE", "MEGARES_FASTA")
-VENN_EXTENSION = config.get("OUTPUT_EXTENSION", "VENN")
-MEGARES_ANNOTATION = config.get("SOURCE_FILE", "MEGARES")
-STATS_EXTENSION = config.get("OUTPUT_EXTENSION", "STATS")
+
+# Databases
+ACLAME_DB = config.get("DATABASES", "ACLAME")
+ICEBERG_DB = config.get("DATABASES", "ICEBERG")
+PLASMID_DB = config.get("DATABASES", "PLASMID")
+MEGARES_DB = config.get("DATABASES", "MEGARES")
+
+# Annotation
+MGES_ANNOTATION = config.get("ANNOTATIONS", "MGES")
+MEGARES_ANNOTATION = config.get("ANNOTATIONS", "MEGARES")
+
+# Tels Source 
 SOURCE_PREFIX = config.get("SOURCE_FILE", "SOURCE_PREFIX")
 SOURCE_SUFFIX = config.get("SOURCE_FILE", "SOURCE_SUFFIX")
-VIOLIN_EXTENSION = config.get("OUTPUT_EXTENSION", "VIOLIN")
-STACKED_EXTENSION = config.get("OUTPUT_EXTENSION", "STACKED")
-HEATMAP_EXTENSION = config.get("OUTPUT_EXTENSION", "HEATMAP")
-FILE_SIZE_EXTENSION = config.get("OUTPUT_EXTENSION", "FILE_SIZE")
-SHORT_MGE_EXTENSION = config.get("SOURCE_EXTENSION", "SHORT_MGE")
-AMR_MATRIX_EXTENSION = config.get("OUTPUT_EXTENSION", "AMR_MATRIX")
-MGE_MATRIX_EXTENSION = config.get("OUTPUT_EXTENSION", "MGE_MATRIX")
-MGE_CLASSIFICATION = config.get("SOURCE_FILE", "MGE_CLASSIFICATION")
-SHORT_AMR_DIV_EXTENSION = config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV")
-INDIV_COMPOS_CHART_EXTENSION = config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART")
-STATISTICAL_ANALYSIS_EXTENSION = config.get("OUTPUT_EXTENSION", "STATISTICAL_ANALYSIS")
-COMPOS_RICHNESS_ANALYSIS_EXTENSION = config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS")
+SHORT_MGE_EXT = config.get("SOURCE_EXTENSION", "SHORT_MGE")
+SHORT_AMR_DIV_EXT = config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV")
+
+# Output Files
+FILE_SIZE_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "FILE_SIZE")
+AMR_MATRIX_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "AMR_MATRIX")
+MGE_MATRIX_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "MGE_MATRIX")
+STATISTICAL_ANALYSIS_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "STATISTICAL_ANALYSIS")
+COMPOS_RICHNESS_ANALYSIS_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "COMPOS_RICHNESS_ANALYSIS")
+
+# Output Extension
+VENN_EXT = config.get("OUTPUT_EXTENSION", "VENN")
+STATS_EXT = config.get("OUTPUT_EXTENSION", "STATS")
+VIOLIN_EXT = config.get("OUTPUT_EXTENSION", "VIOLIN")
+STACKED_EXT = config.get("OUTPUT_EXTENSION", "STACKED")
+HEATMAP_EXT = config.get("OUTPUT_EXTENSION", "HEATMAP")
+INDIV_COMPOS_CHART_EXT = config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART")
+
+# Parameters
+AMR_ANALYSIS = config.getboolean("PARAMETERS", "AMR_ANALYSIS")
+MGE_ANALYSIS = config.getboolean("PARAMETERS", "MGE_ANALYSIS")
 
 
 if config.getboolean("STEPS", "STATS"):
 	def calculate_stats(file_name):
-		stats_file_output = SOURCE_PREFIX + file_name + SOURCE_SUFFIX + STATS_EXTENSION
+		stats_file_output = SOURCE_PREFIX + file_name + SOURCE_SUFFIX + STATS_EXT
 		if not(os.path.exists(stats_file_output)):
 			# Count dedup reads
 			read_list_source = SOURCE_PREFIX + file_name + SOURCE_SUFFIX
@@ -115,87 +132,86 @@ if config.getboolean("STEPS", "STATS"):
 if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
 	stats_analyzer_object = statistical_analyzer(SOURCE_PREFIX,
 												 SOURCE_SUFFIX,
-												 SHORT_AMR_DIV_EXTENSION,
-												 SHORT_MGE_EXTENSION,
-												 STATS_EXTENSION)
+												 SHORT_AMR_DIV_EXT,
+												 SHORT_MGE_EXT,
+												 STATS_EXT)
 	
 	for file_name in file_list:
 		stats_analyzer_object.analyzeFile(file_name)
 
-	stats_analyzer_object.printAnalysis(output_folder, STATISTICAL_ANALYSIS_EXTENSION)
+	stats_analyzer_object.printAnalysis(STATISTICAL_ANALYSIS_OUTPUT)
 
 if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 	crAnalyzer = compos_richness_analyzer(SOURCE_PREFIX, 
 				       					  SOURCE_SUFFIX, 
-										  SHORT_AMR_DIV_EXTENSION, 
-										  SHORT_MGE_EXTENSION,
-										  MGE_CLASSIFICATION)
+										  SHORT_AMR_DIV_EXT, 
+										  SHORT_MGE_EXT,
+										  MGES_ANNOTATION)
 	
 	for file_name in file_list:
 		crAnalyzer.analyzeFile(file_name)
-	crAnalyzer.printAnalysis(output_folder, COMPOS_RICHNESS_ANALYSIS_EXTENSION)
+	crAnalyzer.printAnalysis(COMPOS_RICHNESS_ANALYSIS_OUTPUT)
 
 	crAnalyzer.makeBarCharts(output_folder + "/ARG_composition_new", 
 			  				 output_folder + "/MGE_composition_new", 
-							 INDIV_COMPOS_CHART_EXTENSION)
+							 INDIV_COMPOS_CHART_EXT)
 
 if config.getboolean("STEPS", "HEATMAP"):
 	heatmapAnalyzer = heatmap_analyzer(SOURCE_PREFIX,
 				    			   	   SOURCE_SUFFIX,
-									   SHORT_AMR_DIV_EXTENSION,
-									   SHORT_MGE_EXTENSION,
+									   SHORT_AMR_DIV_EXT,
+									   SHORT_MGE_EXT,
 									   MEGARES_ANNOTATION)
 	for file_name in file_list:
 		heatmapAnalyzer.addToMaps(file_name)
-	heatmapAnalyzer.makeMaps(output_folder + "/ARG_heatmap", HEATMAP_EXTENSION)
+	heatmapAnalyzer.makeMaps(output_folder + "/ARG_heatmap", HEATMAP_EXT)
 
 if config.getboolean("STEPS", "FILE_SIZE"):
-	fileOfSizes = open(output_folder + "/" + FILE_SIZE_EXTENSION, "w")
+	fileOfSizes = open(FILE_SIZE_OUTPUT, "w")
 	for file_name in file_list:
 		size = str(os.stat(SOURCE_PREFIX + file_name + SOURCE_SUFFIX).st_size)
 		fileOfSizes.write(file_name + "," + size + "\n")
 	fileOfSizes.close()
 
 if config.getboolean("STEPS", "VIOLIN"):
-	abundanceAnalyzer = abundance_analyzer(SOURCE_PREFIX, 
-										   SOURCE_SUFFIX, 
-										   output_folder + "/" + FILE_SIZE_EXTENSION,
-										   SHORT_AMR_DIV_EXTENSION, 
-										   SHORT_MGE_EXTENSION,
-										   MEGARES_DB)
+	abundance_analyzer = AbundanceAnalyzer(SOURCE_PREFIX, SOURCE_SUFFIX, 
+										   FILE_SIZE_OUTPUT, SHORT_AMR_DIV_EXT, 
+										   SHORT_MGE_EXT, ACLAME_DB, ICEBERG_DB,
+										   PLASMID_DB, MEGARES_DB)
+	
 	for file_name in file_list:
-		abundanceAnalyzer.findAbsoluteAbundance(file_name)
-	abundanceAnalyzer.makeViolinPlot(output_folder, VIOLIN_EXTENSION)
+		abundance_analyzer.find_absolute_abundance(file_name, AMR_ANALYSIS, MGE_ANALYSIS)
+	abundance_analyzer.make_violin_plot(output_folder, VIOLIN_EXT, AMR_ANALYSIS, MGE_ANALYSIS)
 
 if config.getboolean("STEPS", "STACKED"):
 	stackedAnalyzer = stacked_abundance_analyzer(SOURCE_PREFIX, 
 												 SOURCE_SUFFIX,
-												 SHORT_AMR_DIV_EXTENSION,
-												 SHORT_MGE_EXTENSION,
-												 STATS_EXTENSION)
+												 SHORT_AMR_DIV_EXT,
+												 SHORT_MGE_EXT,
+												 STATS_EXT)
 	for file_name in file_list:
 		stackedAnalyzer.findAbsoluteAbundance(file_name)
-	stackedAnalyzer.makeStack(output_folder, STACKED_EXTENSION)
+	stackedAnalyzer.makeStack(output_folder, STACKED_EXT)
 
 if config.getboolean("STEPS", "VENN"):
 	vennAnalyzer = venn_analyzer(SOURCE_PREFIX, 
 								 SOURCE_SUFFIX,
-								 SHORT_AMR_DIV_EXTENSION, 
-								 SHORT_MGE_EXTENSION)
+								 SHORT_AMR_DIV_EXT, 
+								 SHORT_MGE_EXT)
 	for file_name in file_list:
 		vennAnalyzer.addToCount(file_name)
-	vennAnalyzer.makeVenn(output_folder, VENN_EXTENSION)
+	vennAnalyzer.makeVenn(output_folder, VENN_EXT)
 
 if config.getboolean("STEPS", "MATRIX"):
 	count_matrix = matrix_creator(SOURCE_PREFIX,
 			       				  SOURCE_SUFFIX,
-								  SHORT_AMR_DIV_EXTENSION,
-								  SHORT_MGE_EXTENSION)
+								  SHORT_AMR_DIV_EXT,
+								  SHORT_MGE_EXT)
 	
 	for file_name in file_list:
 		count_matrix.add_column(file_name)
 
-	count_matrix.print_matrix(output_folder, AMR_MATRIX_EXTENSION, MGE_MATRIX_EXTENSION)
+	count_matrix.print_matrix(AMR_MATRIX_OUTPUT, MGE_MATRIX_OUTPUT)
 
 
 # megares_full_reference_length(config['SOURCE_FILE']['MEGARES_FASTA'], output_folder + "/references_length.csv")
@@ -231,9 +247,9 @@ if config.getboolean("STEPS", "SPECIAL"):
 	mgeInfo = special(SOURCE_PREFIX,
 									"AlignedToMegares.csv",
 									SOURCE_SUFFIX,
-									SHORT_MGE_EXTENSION,
+									SHORT_MGE_EXT,
 									config.get("SOURCE_EXTENSION", "OVERLAP_OUTPUT"),
-									MGE_CLASSIFICATION)
+									MGES_ANNOTATION)
 	colocInfo = special_coloc(SOURCE_PREFIX,
 									"AlignedToMegares.csv",
 									SOURCE_SUFFIX,
