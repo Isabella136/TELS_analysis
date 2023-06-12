@@ -1,5 +1,5 @@
 from tels_analysis.compos_richness_analysis.indiv_composition import indiv_composition
-from tels_analysis import mgeDict
+from tels_analysis import get_mge_annot_dict
 from matplotlib import pyplot
 from PIL import Image
 import seaborn
@@ -15,7 +15,7 @@ class compos_richness_analyzer:
         this.source_suffix = SOURCE_SUFFIX
         this.amr_reads = SHORT_AMR_DIV
         this.mge_reads = SHORT_MGE
-        this.mge_dict = mgeDict(MGE_CLASSIFICATION)
+        this.mge_dict = get_mge_annot_dict(MGE_CLASSIFICATION)
         this.compos_richness_list = []
         this.composition_data = []
         this.MGE_list = []

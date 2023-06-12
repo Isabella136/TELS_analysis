@@ -1,88 +1,57 @@
 from Bio import SeqIO
+import csv
 
-def fileDict(fileName):
+# lambda that generates tels output file
+tels_file_path = (lambda self, sample_name, extension : 
+             self.source_prefix + sample_name + self.source_suffix + extension)
+
+
+def fileDict(sample_name):
     sample = ""
     seqPlatform = ""
 
     #Determine organism
-    if fileName[0] == 'B':
+    if sample_name[0] == 'B':
         sample = "Bovine fecal"
-        fileName = fileName[2:]
-    elif fileName[0] == 'H':
+        sample_name = sample_name[2:]
+    elif sample_name[0] == 'H':
         sample = "Human fecal"
-        fileName = fileName[2:]
-    elif fileName[0] == 'M':
+        sample_name = sample_name[2:]
+    elif sample_name[0] == 'M':
         sample = "Mock"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'S'
+        sample_name = sample_name[2:]
+    else: #sample_name[0] = 'S'
         sample = "Soil"
-        fileName = fileName[1:]
+        sample_name = sample_name[1:]
 
     #Determine whether V2 or XT
-    if fileName[0] == 'V':
+    if sample_name[0] == 'V':
         sample = sample + " (V2)"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'X'
+        sample_name = sample_name[2:]
+    else: #sample_name[0] = 'X'
         sample = sample + " (XT)"
-        fileName = fileName[2:]
+        sample_name = sample_name[2:]
 
     #Determine probes
-    if fileName[0:2] == "AM":
+    if sample_name[0:2] == "AM":
         sample = sample + " + ARG-MGE probe"
         seqPlatform = "TELSeq"
-        fileName = fileName[2:]
-    elif fileName[0] == 'A':
+        sample_name = sample_name[2:]
+    elif sample_name[0] == 'A':
         sample = sample + " + ARG probe"
         seqPlatform = "TELSeq"
-        fileName = fileName[1:]
-    elif fileName[0] == 'M':
+        sample_name = sample_name[1:]
+    elif sample_name[0] == 'M':
         sample = sample + " + MGE probe"
         seqPlatform = "TELSeq"
-        fileName = fileName[1:]
-    else: #fileName[0] == 'N'
+        sample_name = sample_name[1:]
+    else: #sample_name[0] == 'N'
         seqPlatform = "PacBio"
         return (sample, seqPlatform)
 
     #Determine baits
-    sample = sample + fileName
+    sample = sample + sample_name
     return (sample, seqPlatform)
-
-def x_axis(fileName):
-    sub_table = ""
-    x_axis = ""
-
-    #Determine organism
-    if fileName[0] == 'B':
-        sub_table = "Bovine"
-        fileName = fileName[2:]
-    elif fileName[0] == 'H':
-        sub_table = "Human"
-        fileName = fileName[2:]
-    elif fileName[0] == 'M':
-        sub_table = "Mock"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'S'
-        sub_table = "Soil"
-        fileName = fileName[1:]
-
-    #Determine whether V2 or XT
-    if fileName[0] == 'V':
-        x_axis = "+V2"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'X'
-        x_axis = "+XT"
-        fileName = fileName[2:]
-
-    #Determine probes
-    if fileName[0:2] == "AM":
-        x_axis = "TELSeq" + x_axis + "+ARG-MGE probes"
-    elif fileName[0] == 'A':
-        x_axis = "TELSeq" + x_axis + "+ARG probes"
-    elif fileName[0] == 'M':
-        x_axis = "TELSeq" + x_axis + "+MGE probes"
-    else: #fileName[0] == 'N'
-        x_axis = "PacBio"
-    return (sub_table,x_axis)
 
 def megares_analyzer(megaresFile):
     def sortList(mechanismsList):
@@ -129,88 +98,86 @@ def get_genes_length(fasta_file):
             gene_length_dict.update({reference.id: len(reference.seq)})
     return gene_length_dict
 
-def getSampleGroup(fileName):
-    sub_table = ""
-    legend = ""
+# Returns sample name definition in tuple form:
+# (Organism, Platform, Chemistry, Probe)
+def get_sample_name_definition(sample_name):
+    # Determine organism
+    if sample_name[0] == 'B':
+        organism = "Bovine"
+        sample_name = sample_name[2:]
+    elif sample_name[0] == 'H':
+        organism = "Human"
+        sample_name = sample_name[2:]
+    elif sample_name[0] == 'M':
+        organism = "Mock"
+        sample_name = sample_name[2:]
+    else: #sample_name[0] = 'S'
+        organism = "Soil"
+        sample_name = sample_name[1:]
 
-    #Determine organism
-    if fileName[0] == 'B':
-        sub_table = "Bovine"
-        fileName = fileName[2:]
-    elif fileName[0] == 'H':
-        sub_table = "Human"
-        fileName = fileName[2:]
-    elif fileName[0] == 'M':
-        sub_table = "Mock"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'S'
-        sub_table = "Soil"
-        fileName = fileName[1:]
+    # Determine chemistry
+    chemistry = sample_name[:2]
+    sample_name = sample_name[2:]
+    
+    # Determine probe specificity and
+    # sequencing platform
+    if sample_name[0:2] == "AM":
+        platform = "TELSeq"
+        probe = "Combo"
+    elif sample_name[0] == 'A':
+        platform = "TELSeq"
+        probe = "ARG"
+    elif sample_name[0] == 'M':
+        platform = "TELSeq"
+        probe = "MGE"
+    else: #sample_name[0] == 'N'
+        platform = "PacBio"
+        probe = None
 
-    #Determine whether V2 or XT
-    if fileName[0] == 'V':
-        sub_table = sub_table + "+V2"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'X'
-        sub_table = sub_table + "+XT"
-        fileName = fileName[2:]
+    return (organism, platform, chemistry, probe)
 
-    #Determine probes
-    if fileName[0:2] == "AM":
-        legend = "TELSeq+ARG-MGE probes"
-    elif fileName[0] == 'A':
-        legend = "TELSeq+ARG probes"
-    elif fileName[0] == 'M':
-        legend = "TELSeq+MGE probes"
-    else: #fileName[0] == 'N'
-        legend = "PacBio"
-    return (sub_table,legend)
-
-def getSampleAndIndex(fileName):
+def getSampleAndIndex(sample_name):
     sub_table = ""
     index = 0
 
     #Determine organism
-    if fileName[0] == 'B':
+    if sample_name[0] == 'B':
         sub_table = "Bovine"
-        fileName = fileName[2:]
-    elif fileName[0] == 'H':
+        sample_name = sample_name[2:]
+    elif sample_name[0] == 'H':
         sub_table = "Human"
-        fileName = fileName[2:]
-    elif fileName[0] == 'M':
+        sample_name = sample_name[2:]
+    elif sample_name[0] == 'M':
         sub_table = "Mock"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'S'
+        sample_name = sample_name[2:]
+    else: #sample_name[0] = 'S'
         sub_table = "Soil"
-        fileName = fileName[1:]
+        sample_name = sample_name[1:]
 
     #Determine whether V2 or XT
-    if fileName[0] == 'V':
+    if sample_name[0] == 'V':
         sub_table = sub_table + "+V2"
-        fileName = fileName[2:]
-    else: #fileName[0] = 'X'
+        sample_name = sample_name[2:]
+    else: #sample_name[0] = 'X'
         sub_table = sub_table + "+XT"
-        fileName = fileName[2:]
+        sample_name = sample_name[2:]
 
     #Determine probes
-    if fileName[0:2] == "AM":
+    if sample_name[0:2] == "AM":
         index = 2
-    elif fileName[0] == 'A':
+    elif sample_name[0] == 'A':
         index = 1
-    elif fileName[0] == 'M':
+    elif sample_name[0] == 'M':
         index = 3
-    else: #fileName[0] == 'N'
+    else: #sample_name[0] == 'N'
         index = 4
     return (sub_table,index)
 
-def mgeDict(filePath):
-    mgeDict = {}
-    mgeFile = open(filePath, "r")
-    i = 0
-    for line in mgeFile:
-        i += 1
-        if i == 1:
-            continue
-        mgeDict[line.split(",")[0]] = line.split(",")[1]
-    mgeFile.close()
-    return mgeDict
+def get_mge_annot_dict(filepath):
+    mge_annot = dict()
+    with open(filepath, "r") as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for line_num, line in enumerate(csv_reader):
+            if line_num == 0: continue
+            mge_annot[line[0]] = line[1]
+    return mge_annot

@@ -1,6 +1,6 @@
 from tels_analysis.heatmap_analysis.double_heatmap_creator import double_heatmap_creator
 from tels_analysis.heatmap_analysis import megares_analyzer
-from tels_analysis import x_axis
+from tels_analysis import get_sample_name_definition
 from matplotlib import pyplot
 import seaborn, numpy, os
 
@@ -38,16 +38,24 @@ class heatmap_analyzer:
                              double_heatmap_creator("Soil", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict)),
                              double_heatmap_creator("Mock", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict))]
         
-    def addToMaps(this, fileName):
-        tempTuple = x_axis(fileName)
+    def addToMaps(this, sample_name):
+        sample_name_definition = get_sample_name_definition(sample_name)
+        organism = sample_name_definition[0]
+        if sample_name_definition[1] == 'PacBio':
+            probe_type = sample_name_definition[1]
+        else:
+            probe_type = (sample_name_definition[1] + ' ' 
+                          + sample_name_definition[2] + ' ' 
+                          + sample_name_definition[3])
+
         index = 0
-        if tempTuple[0] == "Human":
+        if organism == "Human":
             index = 1
-        elif tempTuple[0] == "Soil":
+        elif organism == "Soil":
             index = 2
-        elif tempTuple[0] == "Mock":
+        elif organism == "Mock":
             index = 3
-        this.drugBool, this.otherBool = this.heatmap_list[index].addToMaps(tempTuple[1], this.filePath(fileName, this.amr_reads), this.drugBool, this.otherBool)
+        this.drugBool, this.otherBool = this.heatmap_list[index].addToMaps(probe_type, this.filePath(sample_name, this.amr_reads), this.drugBool, this.otherBool)
 
     def makeMaps(this, OUTPUT_PREFIX, HEATMAP):
         for tuple in this.drugBool:

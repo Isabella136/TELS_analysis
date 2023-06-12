@@ -1,4 +1,4 @@
-from tels_analysis import mgeDict
+from tels_analysis import get_mge_annot_dict
 import itertools
 
 class special:
@@ -17,7 +17,7 @@ class special:
         file.close()
         this.source_suffix = SOURCE_SUFFIX
         this.extension = [SHORT_MGE, OVERLAP_OUTPUT]
-        this.mge_dict = mgeDict(MGE_CLASSIFICATION)
+        this.mge_dict = get_mge_annot_dict(MGE_CLASSIFICATION)
         this.sample_list = []
         this.classified_arg = {}
         this.classified_aligned_arg = {}
