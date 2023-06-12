@@ -1,99 +1,162 @@
 from math import log10
+import csv
 
-class indiv_stacked_abundance:
-    def __init__(this):
-        this.absolute_abundance = {}
-        this.relative_abundance = {}
-        this.classDict = {}
-        this.classList = []
-        this.statsFilepaths = {}
+class IndivStackedAbundance:
 
-    def addToAbsolute(this, filepath, legend, stats):
-        if legend not in this.statsFilepaths:
-            this.statsFilepaths[legend] = []
-        this.statsFilepaths[legend].append(stats)
-        argFile = open(filepath, "r")
-        if legend not in this.absolute_abundance:
-            this.absolute_abundance[legend] = {}
-        lineNum = 0
-        for line in argFile:
-            lineNum += 1
-            if lineNum < 20:
-                continue
-            line_list = line.split(',')
-            arg_header = line_list[0].split("|")
-            if arg_header[4] not in list(this.absolute_abundance[legend].keys()):
-                this.absolute_abundance[legend][arg_header[4]] = 0
-            this.absolute_abundance[legend][arg_header[4]] += int(line_list[1])
-            className = arg_header[2]
-            if arg_header[1] != "Drugs":
-                className = arg_header[1] + " resistance"
-            elif className == "betalactams":
-                className = "Betalactams"
-            elif className == "Mycobacterium_tuberculosis-specific_Drug":
-                className = "M_tuberculosis-specific_Drug"
-            if arg_header[4] not in this.classDict:
-                this.classDict[arg_header[4]] = className
-            if className not in this.classList:
-                this.classList.append(className)
-    
-    def makeAbundanceRelative(this):
-        avgReads = {}
-        for legend, list in this.statsFilepaths.items():
-            for filepath in list:
-                statFile = open(filepath, "r")
-                statFile.readline()
-                readCount = int(statFile.readline().split(',')[1])
-                if legend not in avgReads:
-                    avgReads[legend] = 0
-                avgReads[legend]+=readCount
-                statFile.close()
-            avgReads[legend] = avgReads[legend]/3
-        total = {}
-        tempRelative = {}
-        for legend, dict in this.absolute_abundance.items():
-            if legend not in tempRelative:
-                tempRelative[legend] = {}
-            for group, count in dict.items():
-                tempRelative[legend].update({group:log10(count/avgReads[legend]*1000000)})
-                if group not in total:
-                    total[group] = 0
-                total[group] += tempRelative[legend][group]
-        sortedTotal = {}
-        while len(total) > 0:
-            max = ('key', -1)
-            for key,val in total.items():
-                if val > max[1]:
-                    max = (key,val)
-            sortedTotal.update({max[0]:max[1]})
-            total.pop(max[0])
-        classDictTemp = this.classDict
-        this.classDict = {}
-        for key in sortedTotal:
-            this.classDict[key] = classDictTemp[key]
-            for legend in tempRelative:
-                if legend not in this.relative_abundance:
-                    this.relative_abundance[legend] = {}
-                if key not in tempRelative[legend]:
-                    this.relative_abundance[legend].update({key:0})
-                else:
-                    this.relative_abundance[legend].update({key:tempRelative[legend][key]})
-        classDictTemp.clear()
-        sortedTotal.clear()
+    def __init__(self, is_amr, mges_annot = dict()):
+        # Object vars that are always used
+        self.absolute_abundance = dict()
+        self.relative_abundance = dict()
+        self.stats_filepaths = dict()
+        self.category_list = list()
+        self.is_amr = is_amr
+
+        # Object vars used only in amr analysis
+        self.group_to_class = dict()
+
+        # Object vars used only in mge analysis
+        self.mge_annot = mges_annot.copy()
         
 
-    def getAbundance(this):
-        toReturn = {}
-        for arg in this.classDict:
-            for legend, dict in this.relative_abundance.items():
-                if legend not in toReturn:
-                    toReturn[legend] = {}
-                if arg not in dict:
-                    toReturn[legend].update({arg:0})
-                else:
-                    toReturn[legend].update({arg:dict[arg]})
-        return toReturn
+    def add_to_absolute(self, legend, filepath, stats):
+        # If this is the first time we encounter 
+        # this sequencing platform and probe type
+        if legend not in self.stats_filepaths:
+            self.stats_filepaths[legend] = list()
+            self.absolute_abundance[legend] = dict()
 
-    def getClassDict(this):
-        this.classList.sort()
-        return (this.classDict, this.classList)
+        self.stats_filepaths[legend].append(stats)
+        with open(filepath, "r") as csv_file:
+            csv_reader = csv.reader(csv_file)
+            # Loop through diversity file
+            for line_num, line in enumerate(csv_reader):
+                # Skips information on total on-target reads and richness
+                if line_num < (19 if self.is_amr else 20):
+                    continue
+
+                # AMR analysis
+                if self.is_amr:
+                    # Count alignments by ARG group
+                    arg_header = line[0].split("|")
+                    if arg_header[4] not in list(self.absolute_abundance[legend].keys()):
+                        self.absolute_abundance[legend][arg_header[4]] = int(line[1])
+                    else:
+                        self.absolute_abundance[legend][arg_header[4]] += int(line[1])
+
+                    # Save AMR class information if needed
+                    if arg_header[4] not in self.group_to_class:
+                        if arg_header[1] != "Drugs":
+                            class_name = arg_header[1] + " resistance"
+                        elif arg_header[2] == "betalactams":
+                            class_name = "Betalactams"
+                        elif arg_header[2] == "Mycobacterium_tuberculosis-specific_Drug":
+                            class_name = "M_tuberculosis-specific_Drug"
+                        else:
+                            class_name = arg_header[2]
+
+                        self.group_to_class[arg_header[4]] = class_name
+
+                    if self.group_to_class[arg_header[4]] not in self.category_list:
+                        self.category_list.append(self.group_to_class[arg_header[4]])
+
+                # MGE analysis
+                else:
+                    # Count alignments by MGE accession
+                    if line[0] not in list(self.absolute_abundance[legend].keys()):
+                        self.absolute_abundance[legend][line[0]] = int(line[1])
+                    else:
+                        self.absolute_abundance[legend][line[0]] += int(line[1])
+
+                    # Save MGE type information if needed
+                    if self.mge_annot[line[0]] not in self.category_list:
+                        self.category_list.append(self.mge_annot[line[0]])
+    
+    def make_abundance_relative(self):
+        # Get average read count of replicate for each sample group
+        average_read_count = dict()
+        for legend, filepath_list in self.stats_filepaths.items():
+            for filepath in filepath_list:
+                with open(filepath, "r") as stat_file:
+                    stat_file.readline()                    # skip duplicate stats information
+
+                    if legend not in average_read_count:    
+                        average_read_count[legend] = int(stat_file.readline().split(',')[1])
+                    else:
+                        average_read_count[legend] += int(stat_file.readline().split(',')[1])
+
+            average_read_count[legend] = average_read_count[legend]/3
+
+        # Make abundance relative to average read count and save
+        # total relative abundance by gene for sorting
+        relative_total = dict()
+        relative_by_probe_type = dict()
+        for legend, alignment_count_dict in self.absolute_abundance.items():
+
+            # This is the first time we encounter 
+            # this sequencing platform and probe type
+            if legend not in relative_by_probe_type:
+                relative_by_probe_type[legend] = dict()
+                
+            for gene, count in alignment_count_dict.items():
+
+                relative_by_probe_type[legend].update(
+                    {gene:log10(count/average_read_count[legend]*1000000)})
+                
+                if gene not in relative_total: 
+                    relative_total[gene] = relative_by_probe_type[legend][gene]
+                else:
+                    relative_total[gene] += relative_by_probe_type[legend][gene]
+
+        # Sorting relative abundance
+        sorted_relative_total = {}
+        while len(relative_total) > 0:
+            max = ('key', -1)
+            for key,val in relative_total.items():
+                if val > max[1]:
+                    max = (key,val)
+            sorted_relative_total.update({max[0]:max[1]})
+            relative_total.pop(max[0])
+
+        # AMR analysis
+        if self.is_amr:
+            group_to_class_unsorted_copy = self.group_to_class
+            self.group_to_class = dict()
+            for key in sorted_relative_total:
+                self.group_to_class[key] = group_to_class_unsorted_copy[key]
+                for legend in relative_by_probe_type:
+                    if legend not in self.relative_abundance:
+                        self.relative_abundance[legend] = dict()
+                    if key not in relative_by_probe_type[legend]:
+                        self.relative_abundance[legend].update({key:0})
+                    else:
+                        self.relative_abundance[legend].update({key:relative_by_probe_type[legend][key]})
+            group_to_class_unsorted_copy.clear()
+            sorted_relative_total.clear()
+
+        # MGE analysis
+        else:
+            mge_annot_unsorted_copy = self.mge_annot
+            self.mge_annot = dict()
+            for key in sorted_relative_total:
+                self.mge_annot[key] = mge_annot_unsorted_copy[key]
+                for legend in relative_by_probe_type:
+                    if legend not in self.relative_abundance:
+                        self.relative_abundance[legend] = dict()
+                    if key not in relative_by_probe_type[legend]:
+                        self.relative_abundance[legend].update({key:0})
+                    else:
+                        self.relative_abundance[legend].update({key:relative_by_probe_type[legend][key]})
+            mge_annot_unsorted_copy.clear()
+            sorted_relative_total.clear()
+        
+
+    def get_abundance(self):
+        return self.relative_abundance
+
+    def get_categories(self):
+        self.category_list.sort()
+        if self.is_amr:
+            return (self.group_to_class, self.category_list)
+        else:
+            return (self.mge_annot, self.category_list)
+        

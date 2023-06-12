@@ -1,4 +1,4 @@
-from tels_analysis.stacked_abundance_analyzer import stacked_abundance_analyzer
+from tels_analysis.stacked_abundance_analyzer import StackedAbundanceAnalyzer
 from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
 #from tels_analysis.colocalization_analyzer import colocalization_analyzer
 from tels_analysis.linear_regression import megares_full_reference_length
@@ -36,7 +36,7 @@ file_list = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
 			"SXTAA",		"SXTAB", 		"SXTAC",		"SXTAMA",		"SXTAMB",		"SXTAMC",
 			"SXTMA",		"SXTMB",		"SXTMC",		"SXTNEGA",		"SXTNEGAM",		"SXTNEGM"]
 
-output_folder = "output"
+output_folder = "output/"
 config_file = "config.ini"
 try:
     options, args = getopt.getopt(sys.argv[1:], "hc:o:")
@@ -55,8 +55,8 @@ for opt, arg in options:
 config = configparser.ConfigParser()
 config.read(config_file)
 
-if not os.path.exists(output_folder + "/"):
-	os.makedirs(output_folder + "/")
+if not os.path.exists(output_folder):
+	os.makedirs(output_folder)
 
 # Retrieving all constants from config
 
@@ -77,11 +77,11 @@ SHORT_MGE_EXT = config.get("SOURCE_EXTENSION", "SHORT_MGE")
 SHORT_AMR_DIV_EXT = config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV")
 
 # Output Files
-FILE_SIZE_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "FILE_SIZE")
-AMR_MATRIX_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "AMR_MATRIX")
-MGE_MATRIX_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "MGE_MATRIX")
-STATISTICAL_ANALYSIS_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "STATISTICAL_ANALYSIS")
-COMPOS_RICHNESS_ANALYSIS_OUTPUT = output_folder + "/" + config.get("SINGLE_OUTPUT_FILE", "COMPOS_RICHNESS_ANALYSIS")
+FILE_SIZE_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "FILE_SIZE")
+AMR_MATRIX_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "AMR_MATRIX")
+MGE_MATRIX_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "MGE_MATRIX")
+STATISTICAL_ANALYSIS_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "STATISTICAL_ANALYSIS")
+COMPOS_RICHNESS_ANALYSIS_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "COMPOS_RICHNESS_ANALYSIS")
 
 # Output Extension
 VENN_EXT = config.get("OUTPUT_EXTENSION", "VENN")
@@ -174,24 +174,29 @@ if config.getboolean("STEPS", "FILE_SIZE"):
 	fileOfSizes.close()
 
 if config.getboolean("STEPS", "VIOLIN"):
-	abundance_analyzer = AbundanceAnalyzer(SOURCE_PREFIX, SOURCE_SUFFIX, 
-										   FILE_SIZE_OUTPUT, SHORT_AMR_DIV_EXT, 
-										   SHORT_MGE_EXT, ACLAME_DB, ICEBERG_DB,
-										   PLASMID_DB, MEGARES_DB)
+	abundance_analyzer = AbundanceAnalyzer(
+		SOURCE_PREFIX, SOURCE_SUFFIX, FILE_SIZE_OUTPUT, 
+		SHORT_AMR_DIV_EXT, SHORT_MGE_EXT, ACLAME_DB, 
+		ICEBERG_DB, PLASMID_DB, MEGARES_DB, MGES_ANNOTATION)
 	
 	for file_name in file_list:
-		abundance_analyzer.find_absolute_abundance(file_name, AMR_ANALYSIS, MGE_ANALYSIS)
-	abundance_analyzer.make_violin_plot(output_folder, VIOLIN_EXT, AMR_ANALYSIS, MGE_ANALYSIS)
+		abundance_analyzer.find_absolute_abundance(
+			file_name, AMR_ANALYSIS, MGE_ANALYSIS)
+		
+	abundance_analyzer.make_violin_plot(
+		output_folder, VIOLIN_EXT, AMR_ANALYSIS, MGE_ANALYSIS)
 
 if config.getboolean("STEPS", "STACKED"):
-	stackedAnalyzer = stacked_abundance_analyzer(SOURCE_PREFIX, 
-												 SOURCE_SUFFIX,
-												 SHORT_AMR_DIV_EXT,
-												 SHORT_MGE_EXT,
-												 STATS_EXT)
+	stackedAnalyzer = StackedAbundanceAnalyzer(
+		SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV_EXT, 
+		SHORT_MGE_EXT, STATS_EXT, MGES_ANNOTATION)
+	
 	for file_name in file_list:
-		stackedAnalyzer.findAbsoluteAbundance(file_name)
-	stackedAnalyzer.makeStack(output_folder, STACKED_EXT)
+		stackedAnalyzer.find_absolute_abundance(
+			file_name, AMR_ANALYSIS, MGE_ANALYSIS)
+
+	stackedAnalyzer.make_stacked_barplot(
+		output_folder, STACKED_EXT, AMR_ANALYSIS, MGE_ANALYSIS)
 
 if config.getboolean("STEPS", "VENN"):
 	vennAnalyzer = venn_analyzer(SOURCE_PREFIX, 
