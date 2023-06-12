@@ -2,12 +2,19 @@ from math import log10
 import statistics
 
 class IndivAbundance:
-    def __init__(self, is_amr):
-        self.accession_to_group = dict()    # Will be used in amr analysis to define 
-                                            # gene accessions by gene group
-        self.absolute_abundance = dict()    # Save absolute abundance for sample group
-        self.relative_abundance = dict()    # Save relative abundance for sample group
-        self.is_amr = is_amr                # Keeps track whether we are working with amr
+
+    def __init__(self, is_amr, mge_annot = dict()):
+        # Object vars that are always used
+        self.absolute_abundance = dict()
+        self.relative_abundance = dict()
+        self.is_amr = is_amr
+
+        # Object vars used only in amr analysis
+        self.accession_to_group = dict()
+        
+        # Object vars used only in mge analysis
+        self.mge_annot = mge_annot
+        
 
     def add_to_absolute(self, filepath):
         # Open file that has diversity information
@@ -47,20 +54,39 @@ class IndivAbundance:
         if self.is_amr:
             intermediate_values = dict()
             for accession, count in self.absolute_abundance.items():
+
+                # If this is the first time we encounter arg group
                 if self.accession_to_group[accession] not in intermediate_values:
                     intermediate_values[self.accession_to_group[accession]] = 0
+
+                # Add abundance relative to gene length and sample group file size
                 intermediate_values[self.accession_to_group[accession]] += (
-                    (100.0 * float(count))/(float(gene_length[accession]*file_size))
-                )
+                    (100.0 * float(count))/(float(gene_length[accession]*file_size)))
             for group, relative_abundance in intermediate_values.items():
                 self.relative_abundance[group] = log10(relative_abundance)
 
         # If mge analysis, take the logarithm for each accession
         else:
+            intermediate_values = dict()
             for accession, count in self.absolute_abundance.items():
-                self.relative_abundance[accession] = log10(
+
+                # If this is the first time we encounter mge type
+                if self.mge_annot[accession] not in intermediate_values:
+                    intermediate_values[self.mge_annot[accession]] = 0
+
+                # Add abundance relative to gene length and sample group file size
+                intermediate_values[self.mge_annot[accession]] += (
                     (100.0 * float(count))/(float(gene_length[accession]*file_size))
                 )
+            for group, relative_abundance in intermediate_values.items():
+                self.relative_abundance[group] = log10(relative_abundance)
+
+        # # If mge analysis, take the logarithm for each accession
+        # else:
+            # for accession, count in self.absolute_abundance.items():
+            #     self.relative_abundance[accession] = log10(
+            #         (100.0 * float(count))/(float(gene_length[accession]*file_size))
+            #     )
         
 
     def get_abundance(self):
