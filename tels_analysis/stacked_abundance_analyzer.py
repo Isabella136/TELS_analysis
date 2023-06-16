@@ -75,10 +75,10 @@ class StackedAbundanceAnalyzer:
 
             # Set up main figure
             fig, axs = pyplot.subplots(
-                nrows=3,
-                ncols=8,
-                figsize=(60, 20),
-                gridspec_kw={'height_ratios': [2,.1,1.5]})
+                nrows=6,
+                ncols=4,
+                figsize=(40, 40),
+                gridspec_kw={'height_ratios': [2,.1,1.5,2,.1,1.5]})
             fig.suptitle(
                 'Relative Abundance & ' + element_name + ' Richness', fontsize=50)
 
@@ -86,7 +86,7 @@ class StackedAbundanceAnalyzer:
             for index, subtable in enumerate(abundance_dict):
 
                 # Stacked bar plot
-                pyplot.sca(axs[0][index])
+                pyplot.sca(axs[0 + 3*int(index//4)][index%4])
                 color_list = seaborn.color_palette("colorblind", n_colors=4)
                 sub_abundance = abundance_dict[subtable].get_abundance()
                 bottom_array = None
@@ -94,47 +94,51 @@ class StackedAbundanceAnalyzer:
                     current_array = numpy.array(list(sub_abundance[legend].values()))
                     x_coords = list(sub_abundance[legend].keys())
                     if bottom_array is None:
-                        axs[0][index].bar(x_coords, current_array, width=1.0,label=legend,
-                                          color=color_list[l_index], alpha=0.5)
+                        axs[0 + 3*int(index//4)][index%4].bar(
+                            x_coords, current_array, width=1.0,label=legend,
+                            color=color_list[l_index], alpha=0.5)
                         bottom_array = current_array
                     else:
-                        axs[0][index].bar(x_coords, current_array, width=1.0, label=legend,
-                                          color=color_list[l_index], alpha=0.5, bottom=bottom_array)
+                        axs[0 + 3*int(index//4)][index%4].bar(
+                            x_coords, current_array, width=1.0, label=legend,
+                            color=color_list[l_index], alpha=0.5, bottom=bottom_array)
                         bottom_array = bottom_array + current_array
-                if index == 0:
-                    axs[0][index].set_ylabel('Log Relative Abundance', size=25)
+                if index%4 == 0:
+                    axs[0 + 3*int(index//4)][index%4].set_ylabel('Log Relative Abundance', size=25)
                     pyplot.yticks(fontsize=20)
-                else:
-                    axs[0][index].sharey(axs[0][0])
+                if index !=  0:
+                    axs[0 + 3*int(index//4)][index%4].sharey(axs[0][0])
                 pyplot.xticks([])
                 pyplot.margins(x=0)
-                axs[0][index].set_title(subtable, size=30)
-                axs[0][index].set_anchor('NE')
-                if index == 7: axs[0][index].legend()   # only show legend color at the last subplot
+                axs[0 + 3*int(index//4)][index%4].set_title(subtable, size=30)
+                axs[0 + 3*int(index//4)][index%4].set_anchor('NE')
+                if index == 3: 
+                    axs[0 + 3*int(index//4)][index%4].legend()   # only show legend color at upper right subplot
 
                 # Color-coded x-axis: 
                 #   assign number to each gene based on category alphabetical sorting
                 #   and use this number to determine color shown on x_axis
-                pyplot.sca(axs[1][index])
+                pyplot.sca(axs[1 + 3*int(index//4)][index%4])
                 gene_to_category, category_list = abundance_dict[subtable].get_categories()
                 x_matrix = list()
                 for arg in gene_to_category:
                     x_matrix.append(category_list.index(gene_to_category[arg]))
                 numpy_array = numpy.array([x_matrix])
-                seaborn.heatmap(numpy_array, ax = axs[1][index], xticklabels=False, 
-                                yticklabels=False, cbar=False, cmap='viridis')
-                axs[1][index].set_anchor('NE')
+                seaborn.heatmap(numpy_array, ax = axs[1 + 3*int(index//4)][index%4], 
+                                xticklabels=False, yticklabels=False, cbar=False, 
+                                cmap='viridis')
+                axs[1 + 3*int(index//4)][index%4].set_anchor('NE')
 
                 # Legend for color-coded x-axis
-                pyplot.sca(axs[2][index])
+                pyplot.sca(axs[2 + 3*int(index//4)][index%4])
                 label_matrix = [*range(len(category_list))]
                 numpy_array = numpy.array(label_matrix).reshape(len(label_matrix),1)
-                seaborn.heatmap(numpy_array, ax = axs[2][index], square=True, 
-                                xticklabels=False, cbar=False, cmap='viridis', 
-                                linewidths=1)
+                seaborn.heatmap(numpy_array, ax = axs[2 + 3*int(index//4)][index%4], 
+                                square=True, xticklabels=False, cbar=False, 
+                                cmap='viridis', linewidths=1)
                 pyplot.yticks(
                     ticks=pyplot.yticks()[0], labels=category_list, fontsize=20, rotation=0)
-                axs[2][index].set_anchor('NE')
+                axs[2 + 3*int(index//4)][index%4].set_anchor('NE')
 
             if not(os.path.exists(output_folder)):
                 os.makedirs(output_folder)
