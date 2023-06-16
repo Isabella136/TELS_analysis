@@ -1,52 +1,75 @@
 import numpy
+import csv
 
-class indiv_heatmap:
-    def __init__(this, antimicrobial, sample_type, mechanismDicts):
-        this.antimicrobial = antimicrobial
-        this.sample_type = sample_type
-        this.mechanism_dict = mechanismDicts[1]
-        this.mech_list = list(this.mechanism_dict.keys())
-        this.columns = [[0]*len(this.mechanism_dict),[0]*len(this.mechanism_dict),[0]*len(this.mechanism_dict),[0]*len(this.mechanism_dict),
-                        [0]*len(this.mechanism_dict),[0]*len(this.mechanism_dict),[0]*len(this.mechanism_dict)]
-        this.x_axis_list = []
+class IndivHeatmap:
+    def __init__(self, organism, indiv_point_dict, antimicrobial = None):
+        self.organism = organism
+        self.antimicrobial = antimicrobial
+        self.indiv_point_dict = indiv_point_dict
+        self.indiv_point_list = list(self.indiv_point_dict.keys())
+
+        self.columns = [[0]*len(self.indiv_point_dict),     # V2 ARG
+                        [0]*len(self.indiv_point_dict),     # V2 MGE
+                        [0]*len(self.indiv_point_dict),     # V2 Combo
+                        [0]*len(self.indiv_point_dict),     # XT ARG
+                        [0]*len(self.indiv_point_dict),     # XT MGE
+                        [0]*len(self.indiv_point_dict),     # XT Combo
+                        [0]*len(self.indiv_point_dict)]     # PacBio
+        self.x_axis_list = ['TELSeq V2 ARG',
+                            'TELSeq V2 MGE',
+                            'TELSeq V2 Combo',
+                            'TELSeq XT ARG',
+                            'TELSeq XT MGE',
+                            'TELSeq XT Combo',
+                            'PacBio']
         
-    def addToMap(this, x_axis, filepath, dictBool):
-        if this.x_axis_list.count(x_axis) == 0:
-            this.x_axis_list.append(x_axis)
-        argFile = open(filepath, "r")
-        lineIndex = 0
-        for line in argFile:
-            lineIndex += 1
-            if lineIndex < 20:
-                continue
-            splitLine = line.split('|')
-            if this.antimicrobial == "Drugs":
-                if splitLine[1] != "Drugs":
-                    continue
-            else:
-                if splitLine[1] == "Drugs":
-                    continue
-            if len(splitLine) == 6:
-                continue
-            index = this.mech_list.index(splitLine[3])
-            this.columns[len(this.x_axis_list)-1][index] = 1
-            cl = splitLine[2]
-            if cl == "betalactams": cl = "Betalactams"
-            dictBool[(cl,splitLine[3])] = True
-        argFile.close()
-        return dictBool
+    def add_to_map(self, x_axis, filepath, bool_dict, mge_annotations = dict()):
+        with open(filepath, "r") as csv_file:
+            csv_reader = csv.reader(csv_file)
+            for row_num, row in enumerate(csv_reader):
+                if row_num < 19: continue
+                if row[0] == 'MGE Header': continue
+
+                # AMR analysis
+                if self.antimicrobial != None:
+                    arg_annot = row[0].split('|')
+                    if self.antimicrobial == "Drugs":
+                        if arg_annot[1] != "Drugs":
+                            continue
+                    else:
+                        if arg_annot[1] == "Drugs":
+                            continue
+                    arg_mechansism = arg_annot[3].replace('_', ' ')
+
+                    index = self.indiv_point_list.index(arg_mechansism)
+                    self.columns[self.x_axis_list.index(x_axis)][index] = 1
+                    arg_class = arg_annot[2].replace('_', ' ')
+                    if arg_class == "betalactams":
+                        arg_class = "Betalactams"
+                    bool_dict[(arg_class, arg_mechansism)] = True
+
+                # MGE analysis
+                else:
+                    index = self.indiv_point_list.index(row[0])
+                    self.columns[self.x_axis_list.index(x_axis)][index] = 1
+                    bool_dict[(mge_annotations[row[0]], row[0])] = True
     
-    def makeMap(this, dictBool, classList):
-        for tuple in dictBool:
-            if not(dictBool[tuple]):
-                index = this.mech_list.index(tuple[1])
-                for column in this.columns:
+    def make_map(self, bool_dict, category_list):
+        # Remove ARG mechansisms or MGE accessions
+        # that are in none of the samples
+        for tuple in bool_dict:
+            if not(bool_dict[tuple]):
+                index = self.indiv_point_list.index(tuple[1])
+                for column in self.columns:
                     column.pop(index)
-                this.mech_list.pop(index)
-        for column in this.columns:
-            for i in range(0, len(column)):
-                if column[i] == 1:
-                    heatmapVal = classList.index(this.mechanism_dict[this.mech_list[i]]) + 1
-                    column[i] = heatmapVal
-        vals = numpy.array(this.columns).transpose()
-        return vals, this.x_axis_list
+                self.indiv_point_list.pop(index)
+
+        # Assign heatmap color value
+        for column in self.columns:
+            for row_num in range(0, len(column)):
+                if column[row_num] == 1:
+                    color_value = 1 + category_list.index(
+                        self.indiv_point_dict[self.indiv_point_list[row_num]])
+                    column[row_num] = color_value
+        vals = numpy.array(self.columns).transpose()
+        return vals, self.x_axis_list

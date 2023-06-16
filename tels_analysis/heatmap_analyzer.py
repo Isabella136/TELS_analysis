@@ -1,46 +1,75 @@
-from tels_analysis.heatmap_analysis.double_heatmap_creator import double_heatmap_creator
-from tels_analysis.heatmap_analysis import megares_analyzer
+from tels_analysis.heatmap_analysis.heatmap_creation.indiv_heatmap import IndivHeatmap
+from tels_analysis.heatmap_analysis.double_heatmap_creator import DoubleHeatmapCreator
 from tels_analysis import get_sample_name_definition
+from tels_analysis import megares_analyzer
+from tels_analysis import tels_file_path
+from tels_analysis import mge_analyzer
 from matplotlib import pyplot
-import seaborn, numpy, os
+import seaborn
+import numpy
+import os
 
-class heatmap_analyzer:
-    filePath = lambda this, fileName, extension : this.source_prefix + fileName + this.source_suffix + extension
+class HeatmapAnalyzer:
+    def __init__(
+            self, SOURCE_PREFIX, SOURCE_SUFFIX, AMR_DIV_EXT,
+            MGE_EXT, MEGARES_ANNOTATION, MGES_ANNOTATION,
+            AMR_ANALYSIS, MGE_ANALYSIS):
 
-    def __init__(this, SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV, SHORT_MGE, MEGARES):
+        # Get tels output file names information
+        self.source_prefix = SOURCE_PREFIX
+        self.source_suffix = SOURCE_SUFFIX
+        self.amr_reads = AMR_DIV_EXT
+        self.mge_reads = MGE_EXT
 
-        def fromListToDict(mechanismList):
-            classDict = {}
-            mechanismDict = {}
-            for tuple in mechanismList:
-                mechanismDict.update({tuple[1]:tuple[0]})
-                if classDict.get(tuple[0], 0) == 0:
-                    classDict.update({tuple[0]:1})
+        # Functions required to initialize object variables
+        def paired_list_to_dict(paired_list):
+            left_dict = dict()
+            right_dict = dict()
+            for tuple in paired_list:
+                right_dict.update({tuple[1]:tuple[0]})
+                if left_dict.get(tuple[0], 0) == 0:
+                    left_dict.update({tuple[0]:1})
                 else:
-                    classDict[tuple[0]] += 1
-            return (classDict, mechanismDict)
-        def makeValsBools(mechanismList):
-            toReturn = {}
-            for tuple in mechanismList:
-                toReturn.update({tuple:False})
-            return toReturn
-        drug_list, other_list = megares_analyzer(MEGARES)
-        this.source_prefix = SOURCE_PREFIX
-        this.source_suffix = SOURCE_SUFFIX
-        this.amr_reads = SHORT_AMR_DIV
-        this.mge_reads = SHORT_MGE
-        this.drugClassDict, drugMechDict = fromListToDict(drug_list)
-        this.otherClassDict, otherMechDict = fromListToDict(other_list)
-        this.drugBool = makeValsBools(drug_list)
-        this.otherBool = makeValsBools(other_list)
-        this.heatmap_list = [double_heatmap_creator("Bovine", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict)), 
-                             double_heatmap_creator("Human", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict)),
-                             double_heatmap_creator("Soil", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict)),
-                             double_heatmap_creator("Mock", (this.drugClassDict, drugMechDict), (this.otherClassDict, otherMechDict))]
-        
-    def addToMaps(this, sample_name):
+                    left_dict[tuple[0]] += 1
+            return (left_dict, right_dict)
+
+        def paired_list_to_bool(paired_list):
+            bool_dict = dict()
+            for tuple in paired_list:
+                bool_dict.update({tuple:False})
+            return bool_dict
+
+        # Set up variables for AMR analysis
+        self.amr_analysis = AMR_ANALYSIS
+        if self.amr_analysis:
+            drug_list, other_list = megares_analyzer(MEGARES_ANNOTATION)
+            self.drug_class_dict, drug_mech_dict = paired_list_to_dict(drug_list)
+            self.other_class_dict, other_mech_dict = paired_list_to_dict(other_list)
+            self.drug_bool_dict = paired_list_to_bool(drug_list)
+            self.other_bool_dict = paired_list_to_bool(other_list)
+            self.megares_heatmap_list = [
+                DoubleHeatmapCreator("Bovine", drug_mech_dict, other_mech_dict),
+                DoubleHeatmapCreator("Human", drug_mech_dict, other_mech_dict),
+                DoubleHeatmapCreator("Soil", drug_mech_dict, other_mech_dict),
+                DoubleHeatmapCreator("Mock", drug_mech_dict, other_mech_dict)]
+
+        # Set up variables for MGE analysis
+        self.mge_analysis = MGE_ANALYSIS
+        if self.mge_analysis:
+            mge_list = mge_analyzer(MGES_ANNOTATION)
+            self.mge_annotations = {t[1]:t[0] for t in mge_list}
+            self.mge_type_dict, mge_access_dict = paired_list_to_dict(mge_list)
+            self.mge_bool_dict = paired_list_to_bool(mge_list)
+            self.mge_heatmap_list = [
+                IndivHeatmap("Bovine", mge_access_dict),
+                IndivHeatmap("Human", mge_access_dict),
+                IndivHeatmap("Soil", mge_access_dict),
+                IndivHeatmap("Mock", mge_access_dict)]
+
+    def add_to_maps(self, sample_name):
         sample_name_definition = get_sample_name_definition(sample_name)
         organism = sample_name_definition[0]
+        index = ['Bovine', 'Human', 'Soil', 'Mock'].index(organism)
         if sample_name_definition[1] == 'PacBio':
             probe_type = sample_name_definition[1]
         else:
@@ -48,85 +77,125 @@ class heatmap_analyzer:
                           + sample_name_definition[2] + ' ' 
                           + sample_name_definition[3])
 
-        index = 0
-        if organism == "Human":
-            index = 1
-        elif organism == "Soil":
-            index = 2
-        elif organism == "Mock":
-            index = 3
-        this.drugBool, this.otherBool = this.heatmap_list[index].addToMaps(probe_type, this.filePath(sample_name, this.amr_reads), this.drugBool, this.otherBool)
+        if self.amr_analysis:
+            self.megares_heatmap_list[index].add_to_maps(
+                probe_type, tels_file_path(self, sample_name, self.amr_reads),
+                self.drug_bool_dict, self.other_bool_dict)
+        if self.mge_analysis:
+            self.mge_heatmap_list[index].add_to_map(
+                probe_type, tels_file_path(self, sample_name, self.mge_reads),
+                self.mge_bool_dict, self.mge_annotations)
 
-    def makeMaps(this, OUTPUT_PREFIX, HEATMAP):
-        for tuple in this.drugBool:
-            if not(this.drugBool[tuple]):
-                this.drugClassDict[tuple[0]] -= 1
-                if this.drugClassDict[tuple[0]] == 0:
-                    this.drugClassDict.pop(tuple[0])
-        for tuple in this.otherBool:
-            if not(this.otherBool[tuple]):
-                this.otherClassDict[tuple[0]] -= 1
-                if this.otherClassDict[tuple[0]] == 0:
-                    this.otherClassDict.pop(tuple[0])
-        drugsMatrixList = []
-        otherMatrixList = []
-        drugsXaxisList = []
-        otherXaxisList = []
-        for i in this.heatmap_list:
-            drugMatrix, drugXaxis, otherMatrix, otherXaxis = i.makeMaps(this.drugBool, this.otherBool, list(this.drugClassDict.keys()), list(this.otherClassDict.keys()))
-            drugsMatrixList.append(drugMatrix)
-            otherMatrixList.append(otherMatrix)
-            drugsXaxisList.append(drugXaxis)
-            otherXaxisList.append(otherXaxis)
+    def make_maps(self, output_folder, heatmap_ext):
 
+        def heatmap_maker(
+                matrix_list, x_axis_list, category_dict, file_prefix, element_name):
+            
+            # Calculate height of heatmap and position of labels
+            label_matrix = list()
+            label_pos = list()
+            indiv_point_total = 0
+            for category_index, category in enumerate(category_dict):
+                for i in range(category_dict[category]):
+                    label_matrix.append(category_index+1)
+                down = indiv_point_total
+                up = down + category_dict[category]
+                label_pos.append((up + down - 1)/2)
+                indiv_point_total += category_dict[category]
 
-        def heatmapMaker(matrixList, xaxisList, classDict, type):
-            labelMatrix = []
-            labelPos = []
-            index = 1
-            mechTotal = 0
-            for cl in classDict:
-                for i in range(0,classDict[cl]):
-                    labelMatrix.append(index)
-                index += 1
-                down = mechTotal
-                up = down + classDict[cl]
-                labelPos.append((up + down - 1)/2)
-                mechTotal += classDict[cl]
+            # Create figure
+            fig, axs = pyplot.subplots(
+                nrows=1,
+                ncols=5,
+                figsize=(40, 25),
+                gridspec_kw={'width_ratios': [1,7,7,7,7]})
+            fig.suptitle(element_name, fontsize=50)
 
-            fig, axs = pyplot.subplots(1,5, gridspec_kw={'width_ratios': [1,7,7,7,7]}, figsize=(40, 25))
-            fig.suptitle('ARG - ' + type, fontsize=50)
-
-            seaborn.heatmap(numpy.array(labelMatrix).reshape(len(labelMatrix),1), ax = axs[0], xticklabels=False, cbar=False, cmap="viridis", vmin=0, vmax=numpy.max(labelMatrix)+1)
+            # Create heatmap legend
+            data = numpy.array(label_matrix).reshape(len(label_matrix),1)
+            seaborn.heatmap(
+                data,
+                ax=axs[0],
+                cbar=False,
+                cmap="viridis",
+                xticklabels=False,
+                vmin=0, vmax=numpy.max(label_matrix))
             pyplot.sca(axs[0])
-            pyplot.yticks(labelPos, list(classDict.keys()), fontsize=20, rotation = 0)
+            pyplot.yticks(
+                label_pos, list(category_dict.keys()), fontsize=20, rotation=0)
 
-            seaborn.heatmap(matrixList[0], ax=axs[1], xticklabels=xaxisList[0], yticklabels=False, cbar=False, cmap="viridis", vmin=0, vmax=numpy.max(labelMatrix)+1)
-            pyplot.sca(axs[1])
-            pyplot.xticks(fontsize=20)
-            axs[1].set_title("Bovine", fontsize=40)
+            # Going through organsims
+            organism_list = ['Bovine', 'Human', 'Soil', 'Mock']
+            for index, organism in enumerate(organism_list):
+                data = matrix_list[index]
+                seaborn.heatmap(
+                    data,
+                    cbar=False,
+                    cmap="viridis",
+                    ax=axs[index+1],
+                    yticklabels=False,
+                    xticklabels=x_axis_list[index],
+                    vmin=0, vmax=numpy.max(label_matrix))
+                pyplot.sca(axs[index+1])
+                pyplot.xticks(fontsize=20)
+                axs[index+1].set_title(organism, fontsize=40)
 
-            seaborn.heatmap(matrixList[1], ax=axs[2], xticklabels=xaxisList[1], yticklabels=False, cbar=False, cmap="viridis", vmin=0, vmax=numpy.max(labelMatrix)+1)
-            pyplot.sca(axs[2])
-            pyplot.xticks(fontsize=20)
-            axs[2].set_title("Human", fontsize=40)
-
-            seaborn.heatmap(matrixList[2], ax=axs[3], xticklabels=xaxisList[2], yticklabels=False, cbar=False, cmap="viridis", vmin=0, vmax=numpy.max(labelMatrix)+1)
-            pyplot.sca(axs[3])
-            pyplot.xticks(fontsize=20)
-            axs[3].set_title("Soil", fontsize=40)
-
-            seaborn.heatmap(matrixList[3], ax=axs[4], xticklabels=xaxisList[3], yticklabels=False, cbar=False, cmap="viridis", vmin=0, vmax=numpy.max(labelMatrix)+1)
-            pyplot.sca(axs[4])
-            pyplot.xticks(fontsize=20)
-            axs[4].set_title("Mock", fontsize=40)
-
-            if not(os.path.exists(OUTPUT_PREFIX)):
-                os.makedirs(OUTPUT_PREFIX)
+            if not(os.path.exists(output_folder)):
+                os.makedirs(output_folder)
 
             pyplot.gcf().subplots_adjust(bottom=0.20, left=0.20)
-            pyplot.savefig(OUTPUT_PREFIX + "/" + type + HEATMAP)
+            pyplot.savefig(output_folder + file_prefix + heatmap_ext)
             pyplot.close()
 
-        heatmapMaker(drugsMatrixList, drugsXaxisList, this.drugClassDict, "Drugs")
-        heatmapMaker(otherMatrixList, otherXaxisList, this.otherClassDict, "Metals and Biocides")
+        if self.amr_analysis:
+            for tuple in self.drug_bool_dict:
+                if not(self.drug_bool_dict[tuple]):
+                    self.drug_class_dict[tuple[0]] -= 1
+                    if self.drug_class_dict[tuple[0]] == 0:
+                        self.drug_class_dict.pop(tuple[0])
+            for tuple in self.other_bool_dict:
+                if not(self.other_bool_dict[tuple]):
+                    self.other_class_dict[tuple[0]] -= 1
+                    if self.other_class_dict[tuple[0]] == 0:
+                        self.other_class_dict.pop(tuple[0])
+            
+            drug_matrix_list = list()
+            drug_x_axis_list = list()
+            other_matrix_list = list()
+            other_x_axis_list = list()
+            for heatmap in self.megares_heatmap_list:
+                # output_tuple = (drug_matrix, drug_x_axis, other_matrix, other_x_axis)
+                output_tuple = heatmap.make_maps(
+                    self.drug_bool_dict, self.other_bool_dict,
+                    list(self.drug_class_dict.keys()),
+                    list(self.other_class_dict.keys()))
+                drug_matrix_list.append(output_tuple[0])
+                drug_x_axis_list.append(output_tuple[1])
+                other_matrix_list.append(output_tuple[2])
+                other_x_axis_list.append(output_tuple[3])
+
+            heatmap_maker(drug_matrix_list, drug_x_axis_list,
+                        self.drug_class_dict, 'ARG_drugs', 'ARG - Drugs')
+            heatmap_maker(other_matrix_list, other_x_axis_list,
+                        self.other_class_dict, 'ARG_bio_metals', 'ARG - Biocides/Metals')
+            
+        if self.mge_analysis:
+            for tuple in self.mge_bool_dict:
+                if not(self.mge_bool_dict[tuple]):
+                    self.mge_type_dict[tuple[0]] -= 1
+                    if self.mge_type_dict[tuple[0]] == 0:
+                        self.mge_type_dict.pop(tuple[0])
+
+            mge_matrix_list = list()
+            mge_x_axis_list = list()
+            for heatmap in self.mge_heatmap_list:
+                # output_tuple = (mge_matrix, mge_x_axis)
+                output_tuple = heatmap.make_map(
+                    self.mge_bool_dict, list(self.mge_type_dict.keys()))
+                mge_matrix_list.append(output_tuple[0])
+                mge_x_axis_list.append(output_tuple[1])
+
+            heatmap_maker(mge_matrix_list, mge_x_axis_list,
+                          self.mge_type_dict, 'MGE', 'MGE')
+
+            

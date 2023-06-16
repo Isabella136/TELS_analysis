@@ -1,18 +1,22 @@
-from tels_analysis.heatmap_analysis.heatmap_creation.indiv_heatmap import indiv_heatmap
+from tels_analysis.heatmap_analysis.heatmap_creation.indiv_heatmap import IndivHeatmap
 
-class double_heatmap_creator:
-    def __init__(this, sample_type, drugDicts, otherDicts):
-        this.sample_type = sample_type
-        this.drugDicts = drugDicts
-        this.otherDicts = otherDicts
-        this.heatmapList = [indiv_heatmap("Drugs", this.sample_type, this.drugDicts),
-                            indiv_heatmap("Metals/Biocides", this.sample_type, this.otherDicts)]
-    def addToMaps(this, x_axis, filepath, drugBool, otherBool):
-        drugBool = this.heatmapList[0].addToMap(x_axis, filepath, drugBool)
-        otherBool = this.heatmapList[1].addToMap(x_axis, filepath, otherBool)
-        return (drugBool, otherBool)
+class DoubleHeatmapCreator:
+    def __init__(self, organism, drug_mech_dict, other_mech_dict):
+        self.organism = organism
+        self.drug_mech_dict = drug_mech_dict
+        self.other_mech_dict = other_mech_dict
+        self.ARG_heatmap_list = [
+            IndivHeatmap(self.organism, self.drug_mech_dict, "Drugs"),
+            IndivHeatmap(self.organism, self.other_mech_dict, "Metals/Biocides")]
+        
+    def add_to_maps(self, x_axis, filepath, drug_bool_dict, other_bool_dict):
+        self.ARG_heatmap_list[0].add_to_map(x_axis, filepath, drug_bool_dict)
+        self.ARG_heatmap_list[1].add_to_map(x_axis, filepath, other_bool_dict)
 
-    def makeMaps(this, drugBool, otherBool, drugClassList, otherClassList):
-        drugMatrix, drugXaxis = this.heatmapList[0].makeMap(drugBool, drugClassList)
-        otherMatrix, otherXaxis = this.heatmapList[1].makeMap(otherBool, otherClassList)
-        return (drugMatrix, drugXaxis, otherMatrix, otherXaxis)
+    def make_maps(
+            self, drug_bool_dict, other_bool_dict, drug_class_list, other_class_list):
+        drug_matrix, drug_x_axis = (
+            self.ARG_heatmap_list[0].make_map(drug_bool_dict, drug_class_list))
+        other_matrix, other_x_axis = (
+            self.ARG_heatmap_list[1].make_map(other_bool_dict, other_class_list))
+        return (drug_matrix, drug_x_axis, other_matrix, other_x_axis)

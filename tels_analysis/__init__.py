@@ -53,42 +53,54 @@ def fileDict(sample_name):
     sample = sample + sample_name
     return (sample, seqPlatform)
 
-def megares_analyzer(megaresFile):
-    def sortList(mechanismsList):
-        if len(mechanismsList) == 1:
-            return mechanismsList
-        else:
-            listA = sortList(mechanismsList[0:int(len(mechanismsList)/2)])
-            listB = sortList(mechanismsList[int(len(mechanismsList)/2):])
-            toReturn = []
-            for i in range(0,len(mechanismsList)):
-                if len(listA) == 0:
-                    toReturn.append(listB.pop(0))
-                elif len(listB) == 0:
-                    toReturn.append(listA.pop(0))
-                elif listA[0][0] < listB[0][0]:
-                    toReturn.append(listA.pop(0))
-                else:
-                    toReturn.append(listB.pop(0))
-            return toReturn
-    drugList = []
-    otherList = []
-    megares = open(megaresFile, "r")
-    megares.readline()
-    for line in megares:
-        splitLine = line.split('|')
-        tempTuple = (splitLine[2], splitLine[3])
-        if splitLine[2] == "betalactams": tempTuple = ("Betalactams", splitLine[3])
-        if splitLine[1] == "Drugs":
-            if drugList.count(tempTuple) == 0:
-                drugList.append(tempTuple)
-        else:
-            if otherList.count(tempTuple) == 0:
-                otherList.append(tempTuple)
-    megares.close()
-    drugList = sortList(drugList)
-    otherList = sortList(otherList)
-    return (drugList, otherList)
+def sort(list_of_pairs):
+    if len(list_of_pairs) == 1:
+        return list_of_pairs
+    else:
+        listA = sort(list_of_pairs[0:int(len(list_of_pairs)/2)])
+        listB = sort(list_of_pairs[int(len(list_of_pairs)/2):])
+        sorted_list = list()
+        for i in range(0,len(list_of_pairs)):
+            if len(listA) == 0:
+                sorted_list.append(listB.pop(0))
+            elif len(listB) == 0:
+                sorted_list.append(listA.pop(0))
+            elif listA[0][0] < listB[0][0]:
+                sorted_list.append(listA.pop(0))
+            else:
+                sorted_list.append(listB.pop(0))
+        return sorted_list
+
+def megares_analyzer(megares_annot_file):   
+    drug_mechanisms = list()
+    other_mechanisms = list()
+    with open(megares_annot_file, "r") as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for row_num, row in enumerate(csv_reader):
+            if row_num == 0: continue
+            class_mech = (row[2], row[3])
+            if row[2] == "betalactams": class_mech = ("Betalactams", row[3])
+            if row[1] == "Drugs":
+                if drug_mechanisms.count(class_mech) == 0:
+                    drug_mechanisms.append(class_mech)
+            else:
+                if other_mechanisms.count(class_mech) == 0:
+                    other_mechanisms.append(class_mech)
+    drug_mechanisms = sort(drug_mechanisms)
+    other_mechanisms = sort(other_mechanisms)
+    return (drug_mechanisms, other_mechanisms)
+
+def mge_analyzer(mge_annot_file):
+    mge_annot_list = list()
+    with open(mge_annot_file, "r") as csv_file:
+        csv_reader = csv.reader(csv_file)
+        for row_num, row in enumerate(csv_reader):
+            if row_num == 0: continue
+            type_accession = (row[1], row[0])
+            if mge_annot_list.count(type_accession) == 0:
+                mge_annot_list.append(type_accession)
+    mge_annot_list = sort(mge_annot_list)
+    return mge_annot_list
 
 def get_genes_length(fasta_file):
     gene_length_dict = dict()

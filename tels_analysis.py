@@ -5,7 +5,7 @@ from tels_analysis.linear_regression import megares_full_reference_length
 from tels_analysis.linear_regression import mge_full_reference_length
 from tels_analysis.statistical_analyzer import statistical_analyzer
 from tels_analysis.abundance_analyzer import AbundanceAnalyzer
-from tels_analysis.heatmap_analyzer import heatmap_analyzer
+from tels_analysis.heatmap_analyzer import HeatmapAnalyzer
 from tels_analysis.matrix_creator import matrix_creator
 from tels_analysis.special_coloc import special_coloc
 from tels_analysis.venn_analyzer import venn_analyzer
@@ -157,14 +157,14 @@ if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
 							 INDIV_COMPOS_CHART_EXT)
 
 if config.getboolean("STEPS", "HEATMAP"):
-	heatmapAnalyzer = heatmap_analyzer(SOURCE_PREFIX,
-				    			   	   SOURCE_SUFFIX,
-									   SHORT_AMR_DIV_EXT,
-									   SHORT_MGE_EXT,
-									   MEGARES_ANNOTATION)
+	heatmapAnalyzer = HeatmapAnalyzer(
+		SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV_EXT,
+		SHORT_MGE_EXT, MEGARES_ANNOTATION, MGES_ANNOTATION,
+		AMR_ANALYSIS, MGE_ANALYSIS)
+	
 	for file_name in file_list:
-		heatmapAnalyzer.addToMaps(file_name)
-	heatmapAnalyzer.makeMaps(output_folder + "/ARG_heatmap", HEATMAP_EXT)
+		heatmapAnalyzer.add_to_maps(file_name)
+	heatmapAnalyzer.make_maps(output_folder, HEATMAP_EXT)
 
 if config.getboolean("STEPS", "FILE_SIZE"):
 	fileOfSizes = open(FILE_SIZE_OUTPUT, "w")
