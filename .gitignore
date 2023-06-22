@@ -7,3 +7,4 @@ TELS_output/*
 *.csv#
 old_output/*
 databases/aclame_db.fasta
+.Rhistory

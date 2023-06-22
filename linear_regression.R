@@ -50,7 +50,7 @@ df=data.frame(Samples=c("BFV2AA","BFV2AB","BFV2AC","BFV2AMA","BFV2AMB","BFV2AMC"
 
 #Filling data frame
 ref_length <- read.csv(
-  "~/Documents/GitHub/TELS_analysis/output/references_length.csv", header=FALSE)
+  "./output/references_length.csv", header=FALSE)
 for (i in 1:sample_count) {
   if ((i-1)%%(sample_count/4) > 8) df$Chemistry[i] <- 'XT'
   else  df$Chemistry[i] <- 'V2'
@@ -69,27 +69,27 @@ for (i in 1:sample_count) {
   else if ((i-1)%%(sample_count/8) < 9) df$Probe[i] <- 'MGE'
   
   colocalizations_richness <- read.csv(
-    paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
+    paste("./TELS_output/sequel-demultiplex.", 
           ".ccs.fastq_deduplicated.fastq_colocalizations_richness.csv", 
           sep=df$Samples[i]), 
     header=FALSE, row.names=NULL, comment.char="#")
   stats <- read.csv(
-    paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
+    paste("./TELS_output/sequel-demultiplex.", 
           ".ccs.fastq_deduplicated.fastq_stats.csv", 
           sep=df$Samples[i]), 
     header=FALSE, row.names=NULL)
   arg <- read.csv(
-    paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
+    paste("./TELS_output/sequel-demultiplex.", 
           ".ccs.fastq_deduplicated.fastq_SHORT_amr_diversity.csv", 
           sep=df$Samples[i]), 
     row.names=NULL)
   mge <- read.csv(
-    paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
+    paste("./TELS_output/sequel-demultiplex.", 
           ".ccs.fastq_deduplicated.fastq_SHORT_mobilome.csv", 
           sep=df$Samples[i]), 
     row.names=NULL)
   readlength <- fromJSON(
-    file = paste("~/Documents/GitHub/TELS_analysis/TELS_output/sequel-demultiplex.", 
+    file = paste("./TELS_output/sequel-demultiplex.", 
                  ".ccs.fastq_deduplicated.fastq_reads_length.json", 
                  sep=df$Samples[i]))
   
@@ -114,6 +114,9 @@ lmer.step <- function(object, steps = 1000, current_step = 0){
   return(lmer.step(new, current_step = current_step+1))
 }
 
+if (file.exists('./output/regression_results') == FALSE) {
+  dir.create('./output/regression_results')
+}
 
 #For control, use assigned chemistry as random variable
 lmer.coloc_grand_fit <- lmer(Unique_Coloc ~ Probe 
@@ -124,13 +127,29 @@ lmer.coloc_grand_fit <- lmer(Unique_Coloc ~ Probe
                             data=df)
 lmer.coloc_best_fit <- lmer.step(lmer.coloc_grand_fit)
 
-r.squaredGLMM(lmer.coloc_grand_fit)
-r.squaredGLMM(lmer.coloc_best_fit)
-extractAIC(lmer.coloc_grand_fit)
-extractAIC(lmer.coloc_best_fit)
+lmer.coloc_best_fit.rsquared <- r.squaredGLMM(lmer.coloc_best_fit)
+lmer.coloc_best_fit.summary <- summary(lmer.coloc_best_fit)
+lmer.coloc_best_fit.random_effects <- ranef(lmer.coloc_best_fit)
+lmer.coloc_best_fit.coefficients <- lmer.coloc_best_fit.summary[["coefficients"]]
+lmer.coloc_best_fit.confidence_intervals <- confint(lmer.coloc_best_fit, method='Wald')
+coloc_coeff_amt = length(lmer.coloc_best_fit.coefficients)/3
+df.lmer.coloc <- data_frame(
+  row.names=row.names(lmer.coloc_best_fit.coefficients), 
+  'Estimate' = lmer.coloc_best_fit.coefficients[
+    c(1:coloc_coeff_amt)],
+  'Standard Error' = lmer.coloc_best_fit.coefficients[
+    c((coloc_coeff_amt+1):(2*coloc_coeff_amt))],
+  't-Value' = lmer.coloc_best_fit.coefficients[
+    c((2*coloc_coeff_amt+1):(coloc_coeff_amt*3))],
+  '2.5%' = lmer.coloc_best_fit.confidence_intervals[
+    c(3:(2+coloc_coeff_amt))],
+  '97.5%' = lmer.coloc_best_fit.confidence_intervals[
+    c((5+coloc_coeff_amt):(2*(coloc_coeff_amt+2)))])
+write.csv(df.lmer.coloc,file='./output/regression_results/colocalization_coefficients.csv')
+write.csv(lmer.coloc_best_fit.random_effects,file='./output/regression_results/coloc_rand_effects.csv')
 
-summary(lmer.coloc_best_fit)
-ranef(lmer.coloc_best_fit)
+png(file='./output/regression_results/colocalization_model_fit.png',
+    width=600, height=600)
 op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$Unique_Coloc, 
      y = round(fitted(lmer.coloc_best_fit)),
@@ -142,6 +161,7 @@ plot(x = df$Unique_Coloc,
      las = 1)
 title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
 par(op)
+dev.off()
 
 lmer.read_grand_fit <- lmer(Read_Count ~ Probe 
                             * SampleType 
@@ -150,13 +170,29 @@ lmer.read_grand_fit <- lmer(Read_Count ~ Probe
                             data=df)
 lmer.read_best_fit <- lmer.step(lmer.read_grand_fit)
 
-r.squaredGLMM(lmer.read_grand_fit)
-r.squaredGLMM(lmer.read_best_fit)
-extractAIC(lmer.read_grand_fit)
-extractAIC(lmer.read_best_fit)
+lmer.read_best_fit.rsquared <- r.squaredGLMM(lmer.read_best_fit)
+lmer.read_best_fit.summary <- summary(lmer.read_best_fit)
+lmer.read_best_fit.random_effects <- ranef(lmer.read_best_fit)
+lmer.read_best_fit.coefficients <- lmer.read_best_fit.summary[["coefficients"]]
+lmer.read_best_fit.confidence_intervals <- confint(lmer.read_best_fit, method='Wald')
+read_coeff_amt = length(lmer.read_best_fit.coefficients)/3
+df.lmer.read <- data_frame(
+  row.names=row.names(lmer.read_best_fit.coefficients), 
+  'Estimate' = lmer.read_best_fit.coefficients[
+    c(1:read_coeff_amt)],
+  'Standard Error' = lmer.read_best_fit.coefficients[
+    c((read_coeff_amt+1):(2*read_coeff_amt))],
+  't-Value' = lmer.read_best_fit.coefficients[
+    c((2*read_coeff_amt+1):(read_coeff_amt*3))],
+  '2.5%' = lmer.read_best_fit.confidence_intervals[
+    c(3:(2+read_coeff_amt))],
+  '97.5%' = lmer.read_best_fit.confidence_intervals[
+    c((5+read_coeff_amt):(2*(read_coeff_amt+2)))])
+write.csv(df.lmer.read,file='./output/regression_results/read_counts_coefficients.csv')
+write.csv(lmer.read_best_fit.random_effects,file='./output/regression_results/read_rand_effects.csv')
 
-summary(lmer.read_best_fit)
-ranef(lmer.read_best_fit)
+png(file='./output/regression_results/read_counts_model_fit.png',
+    width=600, height=600)
 op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$Read_Count, 
      y = round(fitted(lmer.read_best_fit)),
@@ -168,6 +204,7 @@ plot(x = df$Read_Count,
      las = 1)
 title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
 par(op)
+dev.off()
 
 lmer.ARG_grand_fit <- lmer(ARG ~ Probe 
                             * SampleType 
@@ -177,14 +214,29 @@ lmer.ARG_grand_fit <- lmer(ARG ~ Probe
                             data=df)
 lmer.ARG_best_fit <- lmer.step(lmer.ARG_grand_fit)
 
-r.squaredGLMM(lmer.ARG_grand_fit)
-r.squaredGLMM(lmer.ARG_best_fit)
-extractAIC(lmer.ARG_grand_fit)
-extractAIC(lmer.ARG_best_fit)
+lmer.ARG_best_fit.rsquared <- r.squaredGLMM(lmer.ARG_best_fit)
+lmer.ARG_best_fit.summary <- summary(lmer.ARG_best_fit)
+lmer.ARG_best_fit.random_effects <- ranef(lmer.ARG_best_fit)
+lmer.ARG_best_fit.coefficients <- lmer.ARG_best_fit.summary[["coefficients"]]
+lmer.ARG_best_fit.confidence_intervals <- confint(lmer.ARG_best_fit, method='Wald')
+ARG_coeff_amt = length(lmer.ARG_best_fit.coefficients)/3
+df.lmer.ARG <- data_frame(
+  row.names=row.names(lmer.ARG_best_fit.coefficients), 
+  'Estimate' = lmer.ARG_best_fit.coefficients[
+    c(1:ARG_coeff_amt)],
+  'Standard Error' = lmer.ARG_best_fit.coefficients[
+    c((ARG_coeff_amt+1):(2*ARG_coeff_amt))],
+  't-Value' = lmer.ARG_best_fit.coefficients[
+    c((2*ARG_coeff_amt+1):(ARG_coeff_amt*3))],
+  '2.5%' = lmer.ARG_best_fit.confidence_intervals[
+    c(3:(2+ARG_coeff_amt))],
+  '97.5%' = lmer.ARG_best_fit.confidence_intervals[
+    c((5+ARG_coeff_amt):(2*(ARG_coeff_amt+2)))])
+write.csv(df.lmer.ARG,file='./output/regression_results/ARG_richness_coefficients.csv')
+write.csv(lmer.ARG_best_fit.random_effects,file='./output/regression_results/ARG_rand_effects.csv')
 
-summary(lmer.ARG_best_fit)
-ranef(lmer.ARG_best_fit)
-vcov(lmer.ARG_best_fit)
+png(file='./output/regression_results/ARG_richness_model_fit.png',
+    width=600, height=600)
 op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$ARG, 
      y = round(fitted(lmer.ARG_best_fit)),
@@ -196,6 +248,7 @@ plot(x = df$ARG,
      las = 1)
 title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
 par(op)
+dev.off()
 
 lmer.MGE_grand_fit <- lmer(MGE ~ Probe 
                            * SampleType 
@@ -205,13 +258,29 @@ lmer.MGE_grand_fit <- lmer(MGE ~ Probe
                            data=df)
 lmer.MGE_best_fit <- lmer.step(lmer.MGE_grand_fit)
 
-r.squaredGLMM(lmer.MGE_grand_fit)
-r.squaredGLMM(lmer.MGE_best_fit)
-extractAIC(lmer.MGE_grand_fit)
-extractAIC(lmer.MGE_best_fit)
+lmer.MGE_best_fit.rsquared <- r.squaredGLMM(lmer.MGE_best_fit)
+lmer.MGE_best_fit.summary <- summary(lmer.MGE_best_fit)
+lmer.MGE_best_fit.random_effects <- ranef(lmer.MGE_best_fit)
+lmer.MGE_best_fit.coefficients <- lmer.MGE_best_fit.summary[["coefficients"]]
+lmer.MGE_best_fit.confidence_intervals <- confint(lmer.MGE_best_fit, method='Wald')
+MGE_coeff_amt = length(lmer.MGE_best_fit.coefficients)/3
+df.lmer.MGE <- data_frame(
+  row.names=row.names(lmer.MGE_best_fit.coefficients), 
+  'Estimate' = lmer.MGE_best_fit.coefficients[
+    c(1:MGE_coeff_amt)],
+  'Standard Error' = lmer.MGE_best_fit.coefficients[
+    c((MGE_coeff_amt+1):(2*MGE_coeff_amt))],
+  't-Value' = lmer.MGE_best_fit.coefficients[
+    c((2*MGE_coeff_amt+1):(MGE_coeff_amt*3))],
+  '2.5%' = lmer.MGE_best_fit.confidence_intervals[
+    c(3:(2+MGE_coeff_amt))],
+  '97.5%' = lmer.MGE_best_fit.confidence_intervals[
+    c((5+MGE_coeff_amt):(2*(MGE_coeff_amt+2)))])
+write.csv(df.lmer.MGE,file='./output/regression_results/MGE_richness_coefficients.csv')
+write.csv(lmer.MGE_best_fit.random_effects,file='./output/regression_results/MGE_rand_effects.csv')
 
-summary(lmer.MGE_best_fit)
-ranef(lmer.MGE_best_fit)
+png(file='./output/regression_results/MGE_richness_model_fit.png',
+    width=600, height=600)
 op <- par(mar = c(5,6,4,2) + 0.1)
 plot(x = df$MGE, 
      y = round(fitted(lmer.MGE_best_fit)),
@@ -223,38 +292,4 @@ plot(x = df$MGE,
      las = 1)
 title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
 par(op)
-
-results <- data.frame(best_fit=c(as.character(lmer.coloc_best_fit@call[["formula"]])[[3]],
-                                 as.character(lmer.read_best_fit@call[["formula"]])[[3]],
-                                 as.character(lmer.ARG_best_fit@call[["formula"]])[[3]],
-                                 as.character(lmer.MGE_best_fit@call[["formula"]])[[3]]),
-                      R2m._grand_fit=c(r.squaredGLMM(lmer.coloc_grand_fit)[1],
-                                       r.squaredGLMM(lmer.read_grand_fit)[1],
-                                       r.squaredGLMM(lmer.ARG_grand_fit)[1],
-                                       r.squaredGLMM(lmer.MGE_grand_fit)[1]),
-                      R2c._grand_fit=c(r.squaredGLMM(lmer.coloc_grand_fit)[2],
-                                       r.squaredGLMM(lmer.read_grand_fit)[2],
-                                       r.squaredGLMM(lmer.ARG_grand_fit)[2],
-                                       r.squaredGLMM(lmer.MGE_grand_fit)[2]),
-                      R2m._best_fit=c(r.squaredGLMM(lmer.coloc_best_fit)[1],
-                                      r.squaredGLMM(lmer.read_best_fit)[1],
-                                      r.squaredGLMM(lmer.ARG_best_fit)[1],
-                                      r.squaredGLMM(lmer.MGE_best_fit)[1]),
-                      R2c._best_fit=c(r.squaredGLMM(lmer.coloc_best_fit)[2],
-                                      r.squaredGLMM(lmer.read_best_fit)[2],
-                                      r.squaredGLMM(lmer.ARG_best_fit)[2],
-                                      r.squaredGLMM(lmer.MGE_best_fit)[2]),
-                      AIC._grand_fit=c(extractAIC(lmer.coloc_grand_fit)[2],
-                                       extractAIC(lmer.read_grand_fit)[2],
-                                       extractAIC(lmer.ARG_grand_fit)[2],
-                                       extractAIC(lmer.MGE_grand_fit)[2]),
-                      AIC._best_fit=c(extractAIC(lmer.coloc_best_fit)[2],
-                                      extractAIC(lmer.read_best_fit)[2],
-                                      extractAIC(lmer.ARG_best_fit)[2],
-                                      extractAIC(lmer.MGE_best_fit)[2]),
-                      row.names = c("Colocalization", "Read Count", "ARG", "MGE"))
-ranef_results <- data.frame(Colocalization=ranef(lmer.coloc_best_fit)[["SampleID"]][["(Intercept)"]],
-                            Read_Count=ranef(lmer.read_best_fit)[["SampleID"]][["(Intercept)"]],
-                            ARG=ranef(lmer.ARG_best_fit)[["SampleID"]][["(Intercept)"]],
-                            MGE=ranef(lmer.MGE_best_fit)[["SampleID"]][["(Intercept)"]],
-                            row.names = row.names(ranef(lmer.ARG_best_fit)[["SampleID"]]))
+dev.off()
