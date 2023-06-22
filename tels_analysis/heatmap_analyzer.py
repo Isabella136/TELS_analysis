@@ -73,9 +73,7 @@ class HeatmapAnalyzer:
         if sample_name_definition[1] == 'PacBio':
             probe_type = sample_name_definition[1]
         else:
-            probe_type = (sample_name_definition[1] + ' ' 
-                          + sample_name_definition[2] + ' ' 
-                          + sample_name_definition[3])
+            probe_type = (sample_name_definition[2] + ' ' + sample_name_definition[3])
 
         if self.amr_analysis:
             self.megares_heatmap_list[index].add_to_maps(
@@ -104,46 +102,68 @@ class HeatmapAnalyzer:
                 indiv_point_total += category_dict[category]
 
             # Create figure
-            fig, axs = pyplot.subplots(
-                nrows=1,
-                ncols=5,
-                figsize=(40, 25),
-                gridspec_kw={'width_ratios': [1,7,7,7,7]})
-            fig.suptitle(element_name, fontsize=50)
+            fig = pyplot.figure(figsize=(55, 30))
+            subfigs = fig.subfigures(
+                nrows=2,
+                ncols=6,
+                wspace=0,
+                width_ratios=[6,1,7,7,7,7],
+                height_ratios=[1,19]
+            )
+            subfigs[0][3].suptitle(element_name, fontsize=70, y=.75)
 
             # Create heatmap legend
             data = numpy.array(label_matrix).reshape(len(label_matrix),1)
+            axs1 = subfigs[1][1].subplots(1,1)
             seaborn.heatmap(
                 data,
-                ax=axs[0],
+                ax=axs1,
                 cbar=False,
                 cmap="viridis",
                 xticklabels=False,
                 vmin=0, vmax=numpy.max(label_matrix))
-            pyplot.sca(axs[0])
+            pyplot.sca(axs1)
             pyplot.yticks(
-                label_pos, list(category_dict.keys()), fontsize=20, rotation=0)
+                label_pos, list(category_dict.keys()), fontsize=30, rotation=0)
 
             # Going through organsims
             organism_list = ['Bovine', 'Human', 'Soil', 'Mock']
             for index, organism in enumerate(organism_list):
-                data = matrix_list[index]
+                axs = subfigs[1][2+index].subplots(
+                    nrows=1,
+                    ncols=2,
+                    gridspec_kw={'width_ratios': [6,1]})
+                subfigs[1][index+2].suptitle(organism, fontsize=50, y=.95)
+                data = numpy.array(matrix_list[index])
+
                 seaborn.heatmap(
-                    data,
+                    data[:,:6],
+                    ax=axs[0],
                     cbar=False,
                     cmap="viridis",
-                    ax=axs[index+1],
                     yticklabels=False,
-                    xticklabels=x_axis_list[index],
+                    xticklabels=x_axis_list[index][:6],
                     vmin=0, vmax=numpy.max(label_matrix))
-                pyplot.sca(axs[index+1])
-                pyplot.xticks(fontsize=20)
-                axs[index+1].set_title(organism, fontsize=40)
+                pyplot.sca(axs[0])
+                pyplot.xticks(fontsize=30, rotation=90)
+                axs[0].set_title('TELSeq', fontsize=40)
+
+                pacbio_data = data[:,6].reshape(len(label_matrix),1)
+                seaborn.heatmap(
+                    pacbio_data,
+                    ax=axs[1],
+                    cbar=False,
+                    cmap="viridis",
+                    yticklabels=False,
+                    xticklabels=False,
+                    vmin=0, vmax=numpy.max(label_matrix))
+                pyplot.sca(axs[1])
+                axs[1].set_title('PacBio', fontsize=40)
 
             if not(os.path.exists(output_folder)):
                 os.makedirs(output_folder)
 
-            pyplot.gcf().subplots_adjust(bottom=0.20, left=0.20)
+            pyplot.gcf().subplots_adjust(top=0.9)
             pyplot.savefig(output_folder + file_prefix + heatmap_ext)
             pyplot.close()
 
