@@ -15,12 +15,12 @@ class IndivHeatmap:
                         [0]*len(self.indiv_point_dict),     # XT MGE
                         [0]*len(self.indiv_point_dict),     # XT Combo
                         [0]*len(self.indiv_point_dict)]     # PacBio
-        self.x_axis_list = ['TELSeq V2 ARG',
-                            'TELSeq V2 MGE',
-                            'TELSeq V2 Combo',
-                            'TELSeq XT ARG',
-                            'TELSeq XT MGE',
-                            'TELSeq XT Combo',
+        self.x_axis_list = ['V2 ARG',
+                            'V2 MGE',
+                            'V2 Combo',
+                            'XT ARG',
+                            'XT MGE',
+                            'XT Combo',
                             'PacBio']
         
     def add_to_map(self, x_axis, filepath, bool_dict, mge_annotations = dict()):
