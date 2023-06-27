@@ -1,5 +1,5 @@
 from tels_analysis.stacked_abundance_analyzer import StackedAbundanceAnalyzer
-from tels_analysis.compos_richness_analyzer import compos_richness_analyzer
+from tels_analysis.compos_richness_analyzer import ComposRichnessAnalyzer
 #from tels_analysis.colocalization_analyzer import colocalization_analyzer
 from tels_analysis.linear_regression import megares_full_reference_length
 from tels_analysis.linear_regression import mge_full_reference_length
@@ -81,7 +81,6 @@ FILE_SIZE_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "FILE_SIZE")
 AMR_MATRIX_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "AMR_MATRIX")
 MGE_MATRIX_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "MGE_MATRIX")
 STATISTICAL_ANALYSIS_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "STATISTICAL_ANALYSIS")
-COMPOS_RICHNESS_ANALYSIS_OUTPUT = output_folder + config.get("SINGLE_OUTPUT_FILE", "COMPOS_RICHNESS_ANALYSIS")
 
 # Output Extension
 VENN_EXT = config.get("OUTPUT_EXTENSION", "VENN")
@@ -90,6 +89,7 @@ VIOLIN_EXT = config.get("OUTPUT_EXTENSION", "VIOLIN")
 STACKED_EXT = config.get("OUTPUT_EXTENSION", "STACKED")
 HEATMAP_EXT = config.get("OUTPUT_EXTENSION", "HEATMAP")
 INDIV_COMPOS_CHART_EXT = config.get("OUTPUT_EXTENSION", "INDIV_COMPOS_CHART")
+COMPOS_RICHNESS_ANALYSIS_EXT = config.get("OUTPUT_EXTENSION", "COMPOS_RICHNESS_ANALYSIS")
 
 # Parameters
 AMR_ANALYSIS = config.getboolean("PARAMETERS", "AMR_ANALYSIS")
@@ -142,19 +142,19 @@ if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
 	stats_analyzer_object.printAnalysis(STATISTICAL_ANALYSIS_OUTPUT)
 
 if config.getboolean("STEPS", "COMPOS_RICHNESS_ANALYSIS"):
-	crAnalyzer = compos_richness_analyzer(SOURCE_PREFIX, 
-				       					  SOURCE_SUFFIX, 
-										  SHORT_AMR_DIV_EXT, 
-										  SHORT_MGE_EXT,
-										  MGES_ANNOTATION)
+	cr_analyzer = ComposRichnessAnalyzer(
+		SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV_EXT,
+		SHORT_MGE_EXT, MGES_ANNOTATION, AMR_ANALYSIS, 
+		MGE_ANALYSIS)
 	
 	for file_name in file_list:
-		crAnalyzer.analyzeFile(file_name)
-	crAnalyzer.printAnalysis(COMPOS_RICHNESS_ANALYSIS_OUTPUT)
+		cr_analyzer.analyze_sample(file_name)
+	cr_analyzer.write_richness(output_folder, COMPOS_RICHNESS_ANALYSIS_EXT)
 
-	crAnalyzer.makeBarCharts(output_folder + "/ARG_composition_new", 
-			  				 output_folder + "/MGE_composition_new", 
-							 INDIV_COMPOS_CHART_EXT)
+	cr_analyzer.make_bar_charts(
+		INDIV_COMPOS_CHART_EXT,
+		output_folder + "/ARG_composition_new", 
+		output_folder + "/MGE_composition_new")
 
 if config.getboolean("STEPS", "HEATMAP"):
 	heatmapAnalyzer = HeatmapAnalyzer(

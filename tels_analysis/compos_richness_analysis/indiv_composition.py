@@ -1,119 +1,93 @@
 from tels_analysis import fileDict
-from matplotlib import pyplot
-from PIL import Image
 import numpy
+import csv
 
 
-class indiv_composition:
-    def __init__(this, fileName, mge_dict):
-        this.name = fileName
-        this.fileName = fileName[:(-2 if 'NEGAM' in fileName else -1)]
-        this.sample, this.seqPlatform = fileDict(fileName)
-        this.arg_composition_data = [0,0,0,0] #in order: drug, metal, biocide, and multi-compound
-        this.arg_class_richness = 0
-        this.arg_mechanism_richness = 0
-        this.arg_group_richness = 0
-        this.mge_composition_data = [0,0,0,0,0,0,0] #in order: PLASMID, PHAGE, TE, IS, ICE, VIRUS, UNCLASSIFIED
-        this.mge_richness = 0
-        this.mge_dict = mge_dict
+class IndivComposition:
+    def __init__(self, sample_name_def, is_amr_analysis, mge_dict = dict()):
+        self.sample_name_definition = sample_name_def
+        self.is_amr_analysis = is_amr_analysis
 
-    def getData(this):
-        toReturn = this.sample
-        toReturn = toReturn + ',' + this.seqPlatform
-        toReturn = toReturn + ',,' + str(this.arg_class_richness)
-        toReturn = toReturn + ',' + str(this.arg_mechanism_richness)
-        toReturn = toReturn + ',' + str(this.arg_group_richness)
-        toReturn = toReturn + ',,' + str(this.mge_richness)
-        return toReturn
+        if self.is_amr_analysis:
+            self.element_types = [
+                'Drugs', 'Metals', 'Biocides', 'Multi-compound']
+        else:
+            self.element_types = [
+                'PLASMID', 'PROPHAGE', 'TE', 'IS', 'ICE', 'VIRUS', 'UNCLASSIFIED']
+
+        # In order if amr analysis: drug, metal, biocide, and multi-compound
+        # In order if mge analysis: plasmid, phage, TE, IS, ICE, virus, unclassified
+        self.composition = [
+            [0] * len(self.element_types),
+            [0] * len(self.element_types),
+            [0] * len(self.element_types)]
+
+        # In order if amr analysis: class, mechanism, group
+        # In order if mge analysis: type, accession
+        self.richness = [
+            [0] * (3 if self.is_amr_analysis else 2),
+            [0] * (3 if self.is_amr_analysis else 2),
+            [0] * (3 if self.is_amr_analysis else 2)]
+        self.cr_index = 0
+
+        self.mge_dict = mge_dict
+
+    def get_richness(self):
+        # Find median and standard dev across replicates 
+        # for each annotation level in self.richness,
+        # returns info as csv row
+        summary = [0] * len(self.richness[0])
+        for level in range(len(self.richness[0])):
+            richness_for_level = [
+                self.richness[0][level],
+                self.richness[1][level],
+                self.richness[2][level]
+            ]
+            median = numpy.median(richness_for_level)
+            stdev = numpy.std(richness_for_level, ddof=1)
+            summary[level] = str(median) + ' (' + "{0:.3f}".format(stdev) + ')'
+
+        return ','.join(self.sample_name_definition) + ',' + ','.join(summary)
     
-    def getComposition(this):
-        return [this.fileName, this.arg_composition_data, this.mge_composition_data]
+    def get_composition(self):
+        # Return composition information for all three replicates
+        return self.composition
 
 
-    def findAllData(this, filepath_ARG_composition, filepath_MGE):
-        this.findARGComposition(filepath_ARG_composition)
-        this.findMGEComposition(filepath_MGE)
+    def add_to_data(self, filepath):
+        # Keep track of all types, classes,
+        # mechanisms, and groups encountered
+        level_lists = list()
+        for level in range(len(self.richness[0])):
+            level_lists.append(list())
 
-    def findARGComposition(this, filepath):
-        arg_composition_file = open(filepath, "r")
-        lineNum = 0
-        classList = []
-        mechanismList = []
-        groupList= []
-        for line in arg_composition_file:
-            lineNum += 1
-            if lineNum < 20:
-                continue
-            arg_header = line.split(',')[0].split('|')
-            if arg_header[1] == "Drugs":
-                this.arg_composition_data[0] += 1
-            elif arg_header[1] == "Metals":
-                this.arg_composition_data[1] += 1
-            elif arg_header[1] == "Biocides":
-                this.arg_composition_data[2] += 1
-            else: #arg_type == "Multi"
-                this.arg_composition_data[3] += 1
-            if classList.count(arg_header[2]) == 0:
-                classList.append(arg_header[2])
-            if mechanismList.count(arg_header[3]) == 0:
-                mechanismList.append(arg_header[3])
-            if groupList.count(arg_header[4]) == 0:
-                groupList.append(arg_header[4])
-        arg_composition_file.close()
-        this.arg_class_richness = len(classList)
-        this.arg_group_richness = len(groupList)
-        this.arg_mechanism_richness = len(mechanismList)
+        with open(filepath, "r") as csv_file:
+            csv_reader = csv.reader(csv_file)
+            for row_num, row in enumerate(csv_reader):
+                if row_num < (19 if self.is_amr_analysis else 20):
+                    continue
 
-    def findMGEComposition(this, filepath):
-        mge_composition_file = open(filepath)
-        lineNum = 0
-        mgeList = []
-        for line in mge_composition_file:
-            lineNum += 1
-            if lineNum <= 20:
-                continue
-            mge = line.split(',')[0]
-            if mge not in this.mge_dict:
-                print(mge)
-                continue
-            if mgeList.count(mge) == 0:
-                mgeList.append(mge)
-            if this.mge_dict[mge] == "PLASMID":
-                this.mge_composition_data[0] += 1
-            elif this.mge_dict[mge] == "PROPHAGE":
-                this.mge_composition_data[1] += 1
-            elif this.mge_dict[mge] == "TE":
-                this.mge_composition_data[2] += 1
-            elif this.mge_dict[mge] == "IS":
-                this.mge_composition_data[3] += 1
-            elif this.mge_dict[mge] == "ICE":
-                this.mge_composition_data[4] += 1
-            elif this.mge_dict[mge] == "VIRUS":
-                this.mge_composition_data[5] += 1
-            elif this.mge_dict[mge] == "UNCLASSIFIED":
-                this.mge_composition_data[6] += 1
-        this.mge_richness = len(mgeList)
-        mge_composition_file.close()
+                # If amr analysis, use accession header to calculate richness
+                if self.is_amr_analysis:
+                    arg_annotations = row[0].split('|')
+                    type = arg_annotations[1]
+                    for index in range(3):
+                        if arg_annotations[2 + index] not in level_lists[index]:
+                            level_lists[index].append(arg_annotations[2 + index])
 
-    def makePieChart(this, filepath_arg_output, filepath_mge_output):
-        if this.arg_class_richness == 0:
-            img = Image.new(mode = "RGB", size = (120, 48), color = (255, 255, 255))
-            img.save(filepath_arg_output)
-        else:
-            vals = numpy.array(this.arg_composition_data)
-            chartColors = ["#5891AD", "#004561", "#FF6F31", "#1C7685"]
-            pyplot.figure(figsize=(120,48))
-            pyplot.pie(vals, colors=chartColors, startangle=90)
-            pyplot.savefig(filepath_arg_output, dpi=10)
-            pyplot.close()
+                # If mge analysis, use mge dict and full
+                # accession name to calculate richness
+                else:
+                    type = self.mge_dict[row[0]]
+                    if type not in level_lists[0]:
+                        level_lists[0].append(type)
+                    if row[0] not in level_lists[1]:
+                        level_lists[1].append(row[0])
 
-        if this.mge_richness == 0:
-            img = Image.new(mode = "RGB", size = (120, 48), color = (255, 255, 255))
-            img.save(filepath_mge_output)
-        else:
-            vals = numpy.array(this.mge_composition_data)
-            chartColors = ["#34A853", "#FBBC04", "#FF6D01", "#EA4335", "#4285F4", "#46BDC6", "#FFC0CB"]
-            pyplot.figure(figsize=(120,48))
-            pyplot.pie(vals, colors=chartColors, startangle=90)
-            pyplot.savefig(filepath_mge_output, dpi=10)
-            pyplot.close()
+                self.composition[self.cr_index][self.element_types.index(type)] += int(row[1])
+
+        for level in range(len(level_lists)):
+            self.richness[self.cr_index][level] = len(level_lists[level])
+
+        self.cr_index += 1
+  
