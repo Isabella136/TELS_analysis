@@ -8,3 +8,5 @@ TELS_output/*
 old_output/*
 databases/aclame_db.fasta
 .Rhistory
+linear_regression_2.R
+linear_regression_3.R
