@@ -96,8 +96,13 @@ class AbundanceAnalyzer:
                         self.initial_source_size[organism][probe_type], genes_length)
 
             # Set up main figure        
-            fig, axs = pyplot.subplots(2,2,figsize=(70, 70),sharey="row")
-            fig.suptitle(element_name + " Relative Abundance", fontsize=70)
+            fig, axs = pyplot.subplots(
+                nrows=2,
+                ncols=2,
+                sharey="row",
+                figsize=(40, 40),
+                layout="constrained")
+            fig.suptitle(element_name + " Relative Abundance\n", fontsize=70)
             fig.add_subplot(111, frame_on=False)
             pyplot.grid(False)
             pyplot.tick_params(labelcolor="none", bottom=False, left=False)
@@ -136,7 +141,7 @@ class AbundanceAnalyzer:
 
             if not(os.path.exists(output_folder)):
                 os.makedirs(output_folder)
-            pyplot.gcf().subplots_adjust(bottom=0.20)
+            pyplot.gcf()
             pyplot.savefig(output_folder + element_name + violin_ext)
             pyplot.close()
 

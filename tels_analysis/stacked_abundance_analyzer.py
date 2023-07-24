@@ -78,9 +78,8 @@ class StackedAbundanceAnalyzer:
                 nrows=6,
                 ncols=4,
                 figsize=(40, 40),
+                layout='constrained',
                 gridspec_kw={'height_ratios': [2,.1,1.5,2,.1,1.5]})
-            fig.suptitle(
-                'Relative Abundance & ' + element_name + ' Richness', fontsize=50)
 
             # Go through each subtable
             for index, subtable in enumerate(abundance_dict):
@@ -104,16 +103,18 @@ class StackedAbundanceAnalyzer:
                             color=color_list[l_index], alpha=0.5, bottom=bottom_array)
                         bottom_array = bottom_array + current_array
                 if index%4 == 0:
-                    axs[0 + 3*int(index//4)][index%4].set_ylabel('Log Relative Abundance', size=25)
-                    pyplot.yticks(fontsize=20)
+                    axs[0 + 3*int(index//4)][index%4].set_ylabel('Log Relative Abundance', size=30)
+                    pyplot.yticks(fontsize=25)
+                else:
+                    pyplot.tick_params('y', labelleft=False)
                 if index !=  0:
                     axs[0 + 3*int(index//4)][index%4].sharey(axs[0][0])
                 pyplot.xticks([])
                 pyplot.margins(x=0)
-                axs[0 + 3*int(index//4)][index%4].set_title(subtable, size=30)
+                axs[0 + 3*int(index//4)][index%4].set_title(subtable, size=40)
                 axs[0 + 3*int(index//4)][index%4].set_anchor('NE')
                 if index == 3: 
-                    axs[0 + 3*int(index//4)][index%4].legend()   # only show legend color at upper right subplot
+                    axs[0 + 3*int(index//4)][index%4].legend(prop={'size': 20})   # only show legend color at upper right subplot
 
                 # Color-coded x-axis: 
                 #   assign number to each gene based on category alphabetical sorting
@@ -137,12 +138,15 @@ class StackedAbundanceAnalyzer:
                                 square=True, xticklabels=False, cbar=False, 
                                 cmap='viridis', linewidths=1)
                 pyplot.yticks(
-                    ticks=pyplot.yticks()[0], labels=category_list, fontsize=20, rotation=0)
+                    ticks=pyplot.yticks()[0], labels=category_list, fontsize=25, rotation=0)
                 axs[2 + 3*int(index//4)][index%4].set_anchor('NE')
 
             if not(os.path.exists(output_folder)):
                 os.makedirs(output_folder)
             pyplot.gcf()
+            #fig.tight_layout()
+            fig.suptitle(
+                'Relative Abundance & ' + element_name + ' Richness\n', fontsize=60)
             pyplot.savefig(output_folder + element_name + stacked_ext)
             pyplot.close()
 
