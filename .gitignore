@@ -3,7 +3,7 @@ output/*
 temp_files/*
 *.pyc
 tels_analysis/.vs/*
-TELS_output/*
+TELS_output*/*
 *.csv#
 old_output/*
 databases/aclame_db.fasta
