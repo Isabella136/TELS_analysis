@@ -47,8 +47,8 @@ class matrix_creator:
             if len(self.mge_rows[row]) < len(self.column_names):
                 self.mge_rows[row].append('0')
 
-    def print_matrix(self, output_folder, amr_matrix, mge_matrix):
-        with open(output_folder + '/' + amr_matrix, 'w') as csv_file:
+    def print_matrix(self, amr_matrix, mge_matrix):
+        with open(amr_matrix, 'w') as csv_file:
             for name in self.column_names:
                 csv_file.write(',' + name)
             csv_file.write('\n')
@@ -58,7 +58,7 @@ class matrix_creator:
                     csv_file.write(',' + count)
                 csv_file.write('\n')
 
-        with open(output_folder + '/' + mge_matrix, 'w') as csv_file:
+        with open(mge_matrix, 'w') as csv_file:
             for name in self.column_names:
                 csv_file.write(',' + name)
             csv_file.write('\n')

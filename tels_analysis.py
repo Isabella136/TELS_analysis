@@ -70,9 +70,19 @@ MEGARES_DB = config.get("DATABASES", "MEGARES")
 MGES_ANNOTATION = config.get("ANNOTATIONS", "MGES")
 MEGARES_ANNOTATION = config.get("ANNOTATIONS", "MEGARES")
 
-# Tels Source 
+# Tels Source
 SOURCE_PREFIX = config.get("SOURCE_FILE", "SOURCE_PREFIX")
 SOURCE_SUFFIX = config.get("SOURCE_FILE", "SOURCE_SUFFIX")
+SOURCE_SUFFIX_DUP = config.get("SOURCE_FILE", "SOURCE_SUFFIX_DUP")
+
+# Tels Source Rarefied
+RAREFY_PREFIX = config.get("SOURCE_FILE", "RAREFY_PREFIX")
+RAREFY_SUFFIX_ALL = config.get("SOURCE_FILE", "RAREFY_SUFFIX_ALL")
+RAREFY_SUFFIX_CHEM = config.get("SOURCE_FILE", "RAREFY_SUFFIX_CHEM")
+RAREFY_SUFFIX_ALL_DUP = config.get("SOURCE_FILE", "RAREFY_SUFFIX_ALL_DUP")
+RAREFY_SUFFIX_CHEM_DUP = config.get("SOURCE_FILE", "RAREFY_SUFFIX_CHEM_DUP")
+
+# Tels Source Extensions
 SHORT_MGE_EXT = config.get("SOURCE_EXTENSION", "SHORT_MGE")
 SHORT_AMR_DIV_EXT = config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV")
 
@@ -97,18 +107,19 @@ MGE_ANALYSIS = config.getboolean("PARAMETERS", "MGE_ANALYSIS")
 
 
 if config.getboolean("STEPS", "STATS"):
-	def calculate_stats(file_name):
-		stats_file_output = SOURCE_PREFIX + file_name + SOURCE_SUFFIX + STATS_EXT
-		if not(os.path.exists(stats_file_output)):
+	def calculate_stats(file_name, prefix, suffix, suffix_dup):
+		stats_file_output = prefix + file_name + suffix + STATS_EXT
+		if (not(os.path.exists(stats_file_output)) 
+	 			and os.path.exists(prefix + file_name + suffix)):
 			# Count dedup reads
-			read_list_source = SOURCE_PREFIX + file_name + SOURCE_SUFFIX
+			read_list_source = prefix + file_name + suffix
 			input_file = open(read_list_source, "r")
 			line_num = 0
 			for line in input_file: line_num += 1
 			input_file.close()
 
 			# Count dup reads
-			read_list_source = SOURCE_PREFIX + file_name + ".ccs.fastq"
+			read_list_source = prefix + file_name + suffix_dup
 			dup_file = open(read_list_source, "r")
 			dupline_num = 0
 			for line in dup_file: dupline_num += 1
@@ -122,8 +133,25 @@ if config.getboolean("STEPS", "STATS"):
 
 	process = []
 	for file_name in file_list:
-		process.append(multiprocessing.Process(target=calculate_stats, args=(file_name,)))
-	for i in range(0, 96, 8):
+		process.append(
+			multiprocessing.Process(
+				target=calculate_stats,
+				args=(
+					file_name, SOURCE_PREFIX, 
+					SOURCE_SUFFIX, SOURCE_SUFFIX_DUP)))
+		process.append(
+			multiprocessing.Process(
+				target=calculate_stats,
+				args=(
+					file_name, RAREFY_PREFIX, 
+					RAREFY_SUFFIX_ALL, RAREFY_SUFFIX_ALL_DUP)))
+		process.append(
+			multiprocessing.Process(
+				target=calculate_stats,
+				args=(
+					file_name, RAREFY_PREFIX, 
+					RAREFY_SUFFIX_CHEM, RAREFY_SUFFIX_CHEM_DUP)))
+	for i in range(0, 288, 8):
 		for t in process[i:i+8]:
 			t.start()
 		for t in process[i:i+8]:

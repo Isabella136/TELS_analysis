@@ -17,10 +17,8 @@ class statistical_analyzer:
         fileStats.findAllStats(this.filePath(fileName, this.stats), this.filePath(fileName, this.amr_reads), this.filePath(fileName, this.mge_reads))
         this.statList.append(fileStats.getStats())
 
-    def printAnalysis(this, outputFolder, STATISTICAL_ANALYSIS):
-        if not(os.path.exists(outputFolder)):
-            os.makedirs(outputFolder)
-        analysis = open(outputFolder + "/" + STATISTICAL_ANALYSIS, "w")
+    def printAnalysis(this, STATISTICAL_ANALYSIS):
+        analysis = open(STATISTICAL_ANALYSIS, "w")
         analysis.write("Sample,Sequencing platform,Raw reads ,De-duplicated reads,Duplication (%),ARG On-target (%),MGE On-target (%)\n")
         for stat in this.statList:
             analysis.write(stat + "\n")
