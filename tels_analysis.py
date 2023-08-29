@@ -26,7 +26,7 @@ file_list = ["BFV2AA",		"BFV2AB",		"BFV2AC",		"BFV2AMA",		"BFV2AMB",		"BFV2AMC",
 			"HFV2AA",		"HFV2AB",		"HFV2AC",		"HFV2AMA",		"HFV2AMB",		"HFV2AMC", 
 			"HFV2MA",		"HFV2MB",		"HFV2MC",		"HFV2NEGA",		"HFV2NEGAM",	"HFV2NEGM",
 			"HFXTAA",		"HFXTAB",		"HFXTAC",		"HFXTAMA",		"HFXTAMB",		"HFXTAMC", 
-			"HFXTMA",		"HFXTMB",		"HFXTMC",		"HFXTNEGA",		"HFXTNEGAM",	"HFXTNEGM", 
+			"HFXTMA",		"HFXTMB",		"HFXTMC",		"HFXTNEGA",		"HFXTNEGAM",	"HFXTNEGM",
 			"MOV2AA",		"MOV2AB",		"MOV2AC",		"MOV2AMA",		"MOV2AMB",		"MOV2AMC",
 			"MOV2MA",		"MOV2MB",		"MOV2MC",		"MOV2NEGA",		"MOV2NEGAM",	"MOV2NEGM",
 			"MOXTAA",		"MOXTAB",		"MOXTAC",		"MOXTAMA",		"MOXTAMB",		"MOXTAMC",
@@ -84,6 +84,7 @@ RAREFY_SUFFIX_CHEM_DUP = config.get("SOURCE_FILE", "RAREFY_SUFFIX_CHEM_DUP")
 
 # Tels Source Extensions
 SHORT_MGE_EXT = config.get("SOURCE_EXTENSION", "SHORT_MGE")
+READS_LENGTH_EXT = config.get("SOURCE_EXTENSION", "READS_LENGTH")
 SHORT_AMR_DIV_EXT = config.get("SOURCE_EXTENSION", "SHORT_AMR_DIV")
 
 # Output Files
@@ -158,11 +159,9 @@ if config.getboolean("STEPS", "STATS"):
 			t.join()
 
 if config.getboolean("STEPS", "STATISTICAL_ANALYSIS"):
-	stats_analyzer_object = statistical_analyzer(SOURCE_PREFIX,
-												 SOURCE_SUFFIX,
-												 SHORT_AMR_DIV_EXT,
-												 SHORT_MGE_EXT,
-												 STATS_EXT)
+	stats_analyzer_object = statistical_analyzer(
+		SOURCE_PREFIX, SOURCE_SUFFIX, SHORT_AMR_DIV_EXT,
+		SHORT_MGE_EXT, STATS_EXT, READS_LENGTH_EXT)
 	
 	for file_name in file_list:
 		stats_analyzer_object.analyzeFile(file_name)
@@ -236,8 +235,8 @@ if config.getboolean("STEPS", "VENN"):
 	vennAnalyzer.makeVenn(output_folder, VENN_EXT)
 
 if config.getboolean("STEPS", "MATRIX"):
-	count_matrix = matrix_creator(SOURCE_PREFIX,
-			       				  SOURCE_SUFFIX,
+	count_matrix = matrix_creator(RAREFY_PREFIX,
+			       				  RAREFY_SUFFIX_ALL,
 								  SHORT_AMR_DIV_EXT,
 								  SHORT_MGE_EXT)
 	

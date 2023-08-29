@@ -97,25 +97,23 @@ class AbundanceAnalyzer:
 
             # Set up main figure        
             fig, axs = pyplot.subplots(
-                nrows=2,
-                ncols=2,
+                nrows=1,
+                ncols=4,
                 sharey="row",
-                figsize=(40, 40),
+                figsize=(80, 20),
                 layout="constrained")
-            fig.suptitle(element_name + " Relative Abundance\n", fontsize=70)
+            fig.suptitle(element_name + " Relative Abundance\n", fontsize=80)
             fig.add_subplot(111, frame_on=False)
             pyplot.grid(False)
             pyplot.tick_params(labelcolor="none", bottom=False, left=False)
             for ax in axs.flat:
-                ax.set_ylabel ("Log Relative Abundance", fontsize=55)
+                ax.set_ylabel ("Log Relative Abundance", fontsize=60)
                 ax.label_outer()
                 ax.set_ylim(-4,6)
 
-            palette_list = ["PuRd", "YlOrBr", "BuGn", "Greys"]
-
             # Set up individual violin plot
             for index, organism in enumerate(abundance_dict):
-                pyplot.sca(axs[index// 2, index% 2])
+                pyplot.sca(axs[index])
                 x_axis_list = list()
                 sample_abundance_dict = dict()
                 for probe_type in abundance_dict[organism]:
@@ -126,18 +124,27 @@ class AbundanceAnalyzer:
                 seaborn.set_style("whitegrid")
                 seaborn.set_context("paper")
 
-                axs[index// 2, index% 2] = seaborn.violinplot(
-                        data=df, inner="box", palette=palette_list[index])
-                axs[index// 2, index% 2].grid(False)
-                axs[index// 2, index% 2].set_title(organism, fontsize=60)
+                axs[index] = seaborn.violinplot(
+                        data=df, inner="box", palette="Greys")
+                axs[index].grid(False)
+                axs[index].set_title(organism, fontsize=70)
 
-                axs[index// 2, index% 2].set_xticklabels(
-                    labels=x_axis_list,
-                    fontsize=40,
-                    rotation=90)
+                if (index == 3) and (element_name == 'ARG'):
+                    artists = axs[index].get_children()
+                    legend_artists = [artists[0], artists[4], artists[8],
+                               artists[12], artists[16], artists[20],
+                               artists[24]]
+                    pyplot.legend(
+                        handles=legend_artists,
+                        labels=x_axis_list,
+                        loc='upper right',
+                        fontsize=40,
+                        ncols=2)
+
+                axs[index].set_xticklabels(labels=[])
                 
-                if index% 2 == 0:
-                    pyplot.yticks(fontsize=40)
+                if index == 0:
+                    pyplot.yticks(fontsize=50)
 
             if not(os.path.exists(output_folder)):
                 os.makedirs(output_folder)
@@ -147,7 +154,7 @@ class AbundanceAnalyzer:
 
         if amr_analysis:
             violin_plot_per_analysis(
-                self.abundance_dict_amr, self.megares_genes_length, 'ARG')           
+                self.abundance_dict_amr, self.megares_genes_length, 'ARG')
         if mge_analysis:
             violin_plot_per_analysis(
                 self.abundance_dict_mge, self.mge_genes_length, 'MGE')

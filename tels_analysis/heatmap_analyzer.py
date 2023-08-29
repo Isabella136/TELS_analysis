@@ -23,8 +23,8 @@ class HeatmapAnalyzer:
 
         # Functions required to initialize object variables
         def paired_list_to_dict(paired_list):
-            left_dict = dict()
-            right_dict = dict()
+            left_dict = dict()  #keeps track of class and type count
+            right_dict = dict() #mech is in class ____; accession is ___ mge type
             for tuple in paired_list:
                 right_dict.update({tuple[1]:tuple[0]})
                 if left_dict.get(tuple[0], 0) == 0:
@@ -67,22 +67,37 @@ class HeatmapAnalyzer:
                 IndivHeatmap("Mock", mge_access_dict)]
 
     def add_to_maps(self, sample_name):
-        sample_name_definition = get_sample_name_definition(sample_name)
+        sample_name_definition = get_sample_name_definition(sample_name, True)
         organism = sample_name_definition[0]
         index = ['Bovine', 'Human', 'Soil', 'Mock'].index(organism)
         if sample_name_definition[1] == 'PacBio':
             probe_type = sample_name_definition[1]
+            if sample_name_definition[2] == 'V2':
+                if sample_name[-1] == 'A':
+                    duplicate = 'A'
+                elif sample_name[-2:] == 'AM':
+                    duplicate = 'B'
+                else:
+                    duplicate = 'C'
+            else:
+                if sample_name[-1] == 'A':
+                    duplicate = 'D'
+                elif sample_name[-2:] == 'AM':
+                    duplicate = 'E'
+                else:
+                    duplicate = 'F'
         else:
             probe_type = (sample_name_definition[2] + ' ' + sample_name_definition[3])
+            duplicate = sample_name[-1]
 
         if self.amr_analysis:
             self.megares_heatmap_list[index].add_to_maps(
                 probe_type, tels_file_path(self, sample_name, self.amr_reads),
-                self.drug_bool_dict, self.other_bool_dict)
+                duplicate, self.drug_bool_dict, self.other_bool_dict)
         if self.mge_analysis:
             self.mge_heatmap_list[index].add_to_map(
                 probe_type, tels_file_path(self, sample_name, self.mge_reads),
-                self.mge_bool_dict, self.mge_annotations)
+                duplicate, self.mge_bool_dict, self.mge_annotations)
 
     def make_maps(self, output_folder, heatmap_ext):
 
@@ -98,19 +113,26 @@ class HeatmapAnalyzer:
                     label_matrix.append(category_index+1)
                 down = indiv_point_total
                 up = down + category_dict[category]
-                label_pos.append((up + down - 1)/2)
+                label_pos.append((up + down)/2)
                 indiv_point_total += category_dict[category]
 
             # Create figure
-            fig = pyplot.figure(figsize=(55, 30))
-            subfigs = fig.subfigures(
+            fig = pyplot.figure(figsize=(65, 85))
+            supersubfigs = fig.subfigures(
                 nrows=2,
-                ncols=6,
-                wspace=0,
-                width_ratios=[6,1,7,7,7,7],
-                height_ratios=[1,19]
+                ncols=1,
+                height_ratios=[1,20]
             )
-            subfigs[0][3].suptitle(element_name, fontsize=70, y=.75)
+            supersubfigs[0].suptitle(element_name, fontsize=90, y=.75)
+
+            subfigs = supersubfigs[1].subfigures(
+                nrows=2,
+                ncols=7,
+                wspace=0,
+                hspace=0,
+                width_ratios=[10,2,20,20,20,20,1],
+                height_ratios=[1,80]
+            )
 
             # Create heatmap legend
             data = numpy.array(label_matrix).reshape(len(label_matrix),1)
@@ -124,46 +146,51 @@ class HeatmapAnalyzer:
                 vmin=0, vmax=numpy.max(label_matrix))
             pyplot.sca(axs1)
             pyplot.yticks(
-                label_pos, list(category_dict.keys()), fontsize=30, rotation=0)
+                label_pos, list(category_dict.keys()), fontsize=50, rotation=0)
 
             # Going through organsims
-            organism_list = ['Bovine', 'Human', 'Soil', 'Mock']
+            organism_list = ['BF', 'FMT', 'PPS', 'Mock']
             for index, organism in enumerate(organism_list):
-                axs = subfigs[1][2+index].subplots(
+                axs = subfigs[1][2+index].subfigures(
                     nrows=1,
                     ncols=2,
-                    gridspec_kw={'width_ratios': [6,1]})
-                subfigs[1][index+2].suptitle(organism, fontsize=50, y=.95)
+                    wspace=-0.1,
+                    width_ratios=[6,1])
+                subfigs[0][index+2].suptitle(organism, fontsize=70, y=.85)
                 data = numpy.array(matrix_list[index])
 
-                seaborn.heatmap(
-                    data[:,:6],
-                    ax=axs[0],
-                    cbar=False,
-                    cmap="viridis",
-                    yticklabels=False,
-                    xticklabels=x_axis_list[index][:6],
-                    vmin=0, vmax=numpy.max(label_matrix))
-                pyplot.sca(axs[0])
-                pyplot.xticks(fontsize=30, rotation=90)
-                axs[0].set_title('TELSeq', fontsize=40)
+                sub_axs = axs[0].subplots(1,6)
+                axs[0].suptitle('TELSeq', fontsize=55)
 
-                pacbio_data = data[:,6].reshape(len(label_matrix),1)
+                for column in range(6):
+                    seaborn.heatmap(
+                        data[:,column*3:column*3+3],
+                        ax=sub_axs[column],
+                        cbar=False,
+                        cmap="viridis",
+                        yticklabels=False,
+                        xticklabels=False,
+                        vmin=0, vmax=numpy.max(label_matrix))
+                    pyplot.sca(sub_axs[column])
+                    pyplot.xlabel(x_axis_list[index][column], fontsize=50, rotation=90)
+
+                axs[0].subplots_adjust(wspace=0.05)
+
+                sub_axs1 = axs[1].subplots(1,1)
+                axs[1].suptitle('PacBio', fontsize=55, x=0.40)
                 seaborn.heatmap(
-                    pacbio_data,
-                    ax=axs[1],
+                    data[:,18:],
+                    ax=sub_axs1,
                     cbar=False,
                     cmap="viridis",
                     yticklabels=False,
                     xticklabels=False,
                     vmin=0, vmax=numpy.max(label_matrix))
-                pyplot.sca(axs[1])
-                axs[1].set_title('PacBio', fontsize=40)
 
             if not(os.path.exists(output_folder)):
                 os.makedirs(output_folder)
 
-            pyplot.gcf().subplots_adjust(top=0.9)
+            pyplot.gcf().subplots_adjust(top=0.95, bottom=0.05)
             pyplot.savefig(output_folder + file_prefix + heatmap_ext)
             pyplot.close()
 

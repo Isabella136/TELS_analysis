@@ -79,7 +79,18 @@ def megares_analyzer(megares_annot_file):
         for row_num, row in enumerate(csv_reader):
             if row_num == 0: continue
             class_mech = (row[2], row[3])
-            if row[2] == "betalactams": class_mech = ("Betalactams", row[3])
+            if row[2] == "betalactams": 
+                class_mech = ("Betalactams", row[3])
+            elif row[2] == "Quaternary Ammonium Compounds (QACs) resistance":
+                class_mech = ("QACs", row[3])
+            elif row[2] == "Drug and biocide and metal resistance":
+                class_mech = ("Drug biocide\nand metal", row[3])
+            elif row[2] == "Cationic antimicrobial peptides":
+                class_mech = ("Cationic antimi-\ncrobial peptides", row[3])
+            elif row[2] == "Phenolic compound resistance":
+                class_mech = ("Phenolic\ncompound", row[3])
+            elif 'resistance' in row[2]:
+                class_mech = (row[2][:-11], row[3])
             if row[1] == "Drugs":
                 if drug_mechanisms.count(class_mech) == 0:
                     drug_mechanisms.append(class_mech)
@@ -112,7 +123,7 @@ def get_genes_length(fasta_file):
 
 # Returns sample name definition in tuple form:
 # (Organism, Platform, Chemistry, Probe)
-def get_sample_name_definition(sample_name):
+def get_sample_name_definition(sample_name, new_probe_name=False):
     # Determine organism
     if sample_name[0] == 'B':
         organism = "Bovine"
@@ -138,10 +149,16 @@ def get_sample_name_definition(sample_name):
         probe = "Combo"
     elif sample_name[0] == 'A':
         platform = "TELSeq"
-        probe = "ARG"
+        if new_probe_name:
+            probe = "RES"
+        else:
+            probe = "ARG"
     elif sample_name[0] == 'M':
         platform = "TELSeq"
-        probe = "MGE"
+        if new_probe_name:
+            probe = "MOB"
+        else:
+            probe = "MGE"
     else: #sample_name[0] == 'N'
         platform = "PacBio"
         probe = None

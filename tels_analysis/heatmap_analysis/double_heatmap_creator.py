@@ -9,9 +9,12 @@ class DoubleHeatmapCreator:
             IndivHeatmap(self.organism, self.drug_mech_dict, "Drugs"),
             IndivHeatmap(self.organism, self.other_mech_dict, "Metals/Biocides")]
         
-    def add_to_maps(self, x_axis, filepath, drug_bool_dict, other_bool_dict):
-        self.ARG_heatmap_list[0].add_to_map(x_axis, filepath, drug_bool_dict)
-        self.ARG_heatmap_list[1].add_to_map(x_axis, filepath, other_bool_dict)
+    def add_to_maps(
+            self, x_axis, filepath, duplicate, drug_bool_dict, other_bool_dict):
+        self.ARG_heatmap_list[0].add_to_map(
+            x_axis, filepath, duplicate, drug_bool_dict)
+        self.ARG_heatmap_list[1].add_to_map(
+            x_axis, filepath, duplicate, other_bool_dict)
 
     def make_maps(
             self, drug_bool_dict, other_bool_dict, drug_class_list, other_class_list):

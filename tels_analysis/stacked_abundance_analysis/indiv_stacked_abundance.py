@@ -3,12 +3,12 @@ import csv
 
 class IndivStackedAbundance:
 
-    def __init__(self, is_amr, mges_annot = dict()):
+    def __init__(self, is_amr, mutable_category_list, mges_annot = dict()):
         # Object vars that are always used
+        self.category_list = mutable_category_list
         self.absolute_abundance = dict()
         self.relative_abundance = dict()
         self.stats_filepaths = dict()
-        self.category_list = list()
         self.is_amr = is_amr
 
         # Object vars used only in amr analysis
@@ -154,9 +154,8 @@ class IndivStackedAbundance:
         return self.relative_abundance
 
     def get_categories(self):
-        self.category_list.sort()
         if self.is_amr:
-            return (self.group_to_class, self.category_list)
+            return self.group_to_class
         else:
-            return (self.mge_annot, self.category_list)
+            return self.mge_annot
         
