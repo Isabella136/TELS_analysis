@@ -39,22 +39,23 @@ class AbundanceAnalyzer:
         self.megares_genes_length = get_genes_length(MEGARES_DB)
 
         # Estabilsh dictionaries for absolute abundance        
-        self.abundance_dict_amr = {"Bovine":{}, "Human":{}, "Soil":{}, "Mock":{}}
-        self.abundance_dict_mge = {"Bovine":{}, "Human":{}, "Soil":{}, "Mock":{}}
-        self.initial_source_size = {"Bovine":{}, "Human":{}, "Soil":{}, "Mock":{}}
+        self.abundance_dict_amr = {"BF":{}, "FMT":{}, "PPS":{}}
+        self.abundance_dict_mge = {"BF":{}, "FMT":{}, "PPS":{}}
+        self.initial_source_size = {"BF":{}, "FMT":{}, "PPS":{}}
 
     def find_absolute_abundance(self, sample_name, amr_analysis, mge_analysis):
         # Retrieve definition in tuple form Organism, Platform, Chemistry, Probe)
         # and save the organism (Bovine, Human, Soil, or Mock)
         # + probe type (PacBio, XT, or V2 and ARG, ARG-MGE, or MGE)
-        sample_name_definition = get_sample_name_definition(sample_name)
+        sample_name_definition = get_sample_name_definition(sample_name, True)
         organism = sample_name_definition[0]
+        if organism == "MOCK": return None
         if sample_name_definition[1] == 'PacBio':
             probe_type = sample_name_definition[1]
         else:
             probe_type = (sample_name_definition[1] + ' ' 
-                          + sample_name_definition[2] + ' ' 
-                          + sample_name_definition[3])
+                        + sample_name_definition[2] + ' ' 
+                        + sample_name_definition[3])
 
         # If we are analyzing AMRs
         if amr_analysis:
@@ -98,9 +99,9 @@ class AbundanceAnalyzer:
             # Set up main figure        
             fig, axs = pyplot.subplots(
                 nrows=1,
-                ncols=4,
+                ncols=3,
                 sharey="row",
-                figsize=(80, 20),
+                figsize=(60, 20),
                 layout="constrained")
             fig.suptitle(element_name + " Relative Abundance\n", fontsize=80)
             fig.add_subplot(111, frame_on=False)
@@ -124,21 +125,31 @@ class AbundanceAnalyzer:
                 seaborn.set_style("whitegrid")
                 seaborn.set_context("paper")
 
+                custom_palette = {
+                    "TELSeq V2 RES": seaborn.color_palette("BuGn", 3)[0],
+                    "TELSeq V2 MOB": seaborn.color_palette("BuGn", 3)[1],
+                    "TELSeq V2 Combo": seaborn.color_palette("BuGn", 3)[2],
+                    "PacBio": 'grey',
+                    "TELSeq XT RES": seaborn.color_palette("Oranges", 3)[2],
+                    "TELSeq XT MOB": seaborn.color_palette("Oranges", 3)[1],
+                    "TELSeq XT Combo": seaborn.color_palette("Oranges", 3)[0]
+                }
                 axs[index] = seaborn.violinplot(
-                        data=df, inner="box", palette="Greys")
+                        data=df, inner="box", palette=custom_palette)
                 axs[index].grid(False)
                 axs[index].set_title(organism, fontsize=70)
 
-                if (index == 3) and (element_name == 'ARG'):
-                    artists = axs[index].get_children()
-                    legend_artists = [artists[0], artists[4], artists[8],
-                               artists[12], artists[16], artists[20],
-                               artists[24]]
+                if (index == 2) and (element_name == 'ARG'):
+                    artists = axs[index-1].get_children()
+                    legend_artists = [
+                        artists[0], artists[4], artists[8],
+                        artists[12], artists[16], artists[20],
+                        artists[24]]
                     pyplot.legend(
                         handles=legend_artists,
                         labels=x_axis_list,
                         loc='upper right',
-                        fontsize=40,
+                        fontsize=45,
                         ncols=2)
 
                 axs[index].set_xticklabels(labels=[])

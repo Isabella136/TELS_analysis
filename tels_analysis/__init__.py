@@ -86,9 +86,9 @@ def megares_analyzer(megares_annot_file):
             elif row[2] == "Drug and biocide and metal resistance":
                 class_mech = ("Drug biocide\nand metal", row[3])
             elif row[2] == "Cationic antimicrobial peptides":
-                class_mech = ("Cationic antimi-\ncrobial peptides", row[3])
+                class_mech = ("Cationic peptides", row[3])
             elif row[2] == "Phenolic compound resistance":
-                class_mech = ("Phenolic\ncompound", row[3])
+                class_mech = ("Phenolic cpd.", row[3])
             elif 'resistance' in row[2]:
                 class_mech = (row[2][:-11], row[3])
             if row[1] == "Drugs":
@@ -126,16 +126,28 @@ def get_genes_length(fasta_file):
 def get_sample_name_definition(sample_name, new_probe_name=False):
     # Determine organism
     if sample_name[0] == 'B':
-        organism = "Bovine"
+        if new_probe_name:
+            organism = "BF"
+        else:
+            organism = "Bovine"
         sample_name = sample_name[2:]
     elif sample_name[0] == 'H':
-        organism = "Human"
+        if new_probe_name:
+            organism = "FMT"
+        else:
+            organism = "Human"
         sample_name = sample_name[2:]
     elif sample_name[0] == 'M':
-        organism = "Mock"
+        if new_probe_name:
+            organism = "MOCK"
+        else:
+            organism = "Mock"
         sample_name = sample_name[2:]
     else: #sample_name[0] = 'S'
-        organism = "Soil"
+        if new_probe_name:
+            organism = "PPS"
+        else:
+            organism = "Soil"
         sample_name = sample_name[1:]
 
     # Determine chemistry

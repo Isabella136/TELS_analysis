@@ -238,7 +238,7 @@ plot_coloc <- function(df, lmer, chem) {
     plot(x = df$Unique_Coloc, 
          y = round(fitted(lmer)),
          main = "Unique Colocalization",
-         xlab = "Original Values",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 4),
          ylim = c(min(round(fitted(lmer))), 4),
@@ -248,7 +248,7 @@ plot_coloc <- function(df, lmer, chem) {
     plot(x = df$Unique_Coloc, 
          y = round(fitted(lmer)),
          main = "Unique Colocalization",
-         xlab = "Original Values",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 2),
          ylim = c(min(round(fitted(lmer))), 2),
@@ -260,8 +260,8 @@ plot_arg  <- function(df, lmer, chem) {
   if (chem == 'xt_') {
     plot(x = df$ARG, 
          y = round(fitted(lmer)),
-         main = "ARG Richness",
-         xlab = "Original Values",
+         main = "LMER Model Fitness Plot for ARG Group Richness ",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 200),
          ylim = c(min(round(fitted(lmer))), 200),
@@ -270,8 +270,8 @@ plot_arg  <- function(df, lmer, chem) {
   else if (chem == 'v2_') {
     plot(x = df$ARG, 
          y = round(fitted(lmer)),
-         main = "ARG Richness",
-         xlab = "Original Values",
+         main = "LMER Model Fitness Plot for ARG Group Richness ",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 60),
          ylim = c(min(round(fitted(lmer))), 60),
@@ -280,8 +280,8 @@ plot_arg  <- function(df, lmer, chem) {
   else {
     plot(x = df$ARG, 
          y = round(fitted(lmer)),
-         main = "ARG Richness",
-         xlab = "Original Values",
+         main = "LMER Model Fitness Plot for ARG Group Richness ",
+         xlab = "ARG group richness values from rarefied samples",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 150),
          ylim = c(min(round(fitted(lmer))), 150),
@@ -293,8 +293,8 @@ plot_mge <- function(df, lmer, chem) {
   if (chem == 'xt_') {
     plot(x = df$MGE, 
          y = round(fitted(lmer)),
-         main = "MGE Richness",
-         xlab = "Original Values",
+         main = "LMER Model Fitness Plot for MGE Accession Richness",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 500),
          ylim = c(min(round(fitted(lmer))), 500),
@@ -303,8 +303,8 @@ plot_mge <- function(df, lmer, chem) {
   else if (chem == 'v2_'){
     plot(x = df$MGE, 
          y = round(fitted(lmer)),
-         main = "MGE Richness",
-         xlab = "Original Values",
+         main = "LMER Model Fitness Plot for MGE Accession Richness",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 60),
          ylim = c(min(round(fitted(lmer))), 60),
@@ -313,8 +313,8 @@ plot_mge <- function(df, lmer, chem) {
   else {
     plot(x = df$MGE, 
          y = round(fitted(lmer)),
-         main = "MGE Richness",
-         xlab = "Original Values",
+         main = "LMER Model Fitness Plot for MGE Accession Richness",
+         xlab = "MGE accession richness values from rarefied samples",
          ylab = " ",
          xlim = c(min(round(fitted(lmer))), 200),
          ylim = c(min(round(fitted(lmer))), 200),
@@ -327,7 +327,7 @@ plot_read <- function(df, lmer, chem) {
     plot(x = df$Read_Count, 
          y = round(fitted(lmer)),
          main = "Total Reads",
-         xlab = "Original Values",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(14900, 15328),
          ylim = c(14900, 15328),
@@ -337,7 +337,7 @@ plot_read <- function(df, lmer, chem) {
     plot(x = df$Read_Count, 
          y = round(fitted(lmer)),
          main = "Total Reads",
-         xlab = "Original Values",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(5020, 5033),
          ylim = c(5020, 5033),
@@ -347,7 +347,7 @@ plot_read <- function(df, lmer, chem) {
     plot(x = df$Read_Count, 
          y = round(fitted(lmer)),
          main = "Total Reads",
-         xlab = "Original Values",
+         xlab = "Rarefied Values",
          ylab = " ",
          xlim = c(4990, 5033),
          ylim = c(4990, 5033),
@@ -384,7 +384,7 @@ write_lmer <- function(
       width=600, height=600)
   op <- par(mar = c(5,6,4,2) + 0.1)
   plot_function(df, lmer, rar_filename)
-  title(ylab = "Fitted Values", cex.lab = 1, line = 4.5)
+  title(ylab = "Fitted values from LMER model", cex.lab = 1, line = 4.5)
   par(op)
   dev.off()
   data = data.frame(row.names = paste(rar_filename, lmer_filename),

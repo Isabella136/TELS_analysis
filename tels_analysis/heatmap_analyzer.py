@@ -48,10 +48,10 @@ class HeatmapAnalyzer:
             self.drug_bool_dict = paired_list_to_bool(drug_list)
             self.other_bool_dict = paired_list_to_bool(other_list)
             self.megares_heatmap_list = [
-                DoubleHeatmapCreator("Bovine", drug_mech_dict, other_mech_dict),
-                DoubleHeatmapCreator("Human", drug_mech_dict, other_mech_dict),
-                DoubleHeatmapCreator("Soil", drug_mech_dict, other_mech_dict),
-                DoubleHeatmapCreator("Mock", drug_mech_dict, other_mech_dict)]
+                DoubleHeatmapCreator("BF", drug_mech_dict, other_mech_dict),
+                DoubleHeatmapCreator("FMT", drug_mech_dict, other_mech_dict),
+                DoubleHeatmapCreator("PPS", drug_mech_dict, other_mech_dict),
+                DoubleHeatmapCreator("MOCK", drug_mech_dict, other_mech_dict)]
 
         # Set up variables for MGE analysis
         self.mge_analysis = MGE_ANALYSIS
@@ -59,17 +59,19 @@ class HeatmapAnalyzer:
             mge_list = mge_analyzer(MGES_ANNOTATION)
             self.mge_annotations = {t[1]:t[0] for t in mge_list}
             self.mge_type_dict, mge_access_dict = paired_list_to_dict(mge_list)
-            self.mge_bool_dict = paired_list_to_bool(mge_list)
+            self.mge_bool_dict = {
+                'BF': paired_list_to_bool(mge_list),
+                'FMT': paired_list_to_bool(mge_list),
+                'PPS': paired_list_to_bool(mge_list)}
             self.mge_heatmap_list = [
-                IndivHeatmap("Bovine", mge_access_dict),
-                IndivHeatmap("Human", mge_access_dict),
-                IndivHeatmap("Soil", mge_access_dict),
-                IndivHeatmap("Mock", mge_access_dict)]
+                IndivHeatmap("BF", mge_access_dict),
+                IndivHeatmap("FMT", mge_access_dict),
+                IndivHeatmap("PPS", mge_access_dict)]
 
     def add_to_maps(self, sample_name):
         sample_name_definition = get_sample_name_definition(sample_name, True)
         organism = sample_name_definition[0]
-        index = ['Bovine', 'Human', 'Soil', 'Mock'].index(organism)
+        index = ['BF', 'FMT', 'PPS', 'MOCK'].index(organism)
         if sample_name_definition[1] == 'PacBio':
             probe_type = sample_name_definition[1]
             if sample_name_definition[2] == 'V2':
@@ -95,9 +97,11 @@ class HeatmapAnalyzer:
                 probe_type, tels_file_path(self, sample_name, self.amr_reads),
                 duplicate, self.drug_bool_dict, self.other_bool_dict)
         if self.mge_analysis:
+            if organism == 'MOCK' or sample_name == 'BFXTAMA':
+                return None
             self.mge_heatmap_list[index].add_to_map(
                 probe_type, tels_file_path(self, sample_name, self.mge_reads),
-                duplicate, self.mge_bool_dict, self.mge_annotations)
+                duplicate, self.mge_bool_dict[organism], self.mge_annotations)
 
     def make_maps(self, output_folder, heatmap_ext):
 
@@ -113,26 +117,43 @@ class HeatmapAnalyzer:
                     label_matrix.append(category_index+1)
                 down = indiv_point_total
                 up = down + category_dict[category]
-                label_pos.append((up + down)/2)
+                if '\n' in category:
+                    label_pos.append((up + down-.4)/2)
+                else:
+                    label_pos.append((up + down)/2)
                 indiv_point_total += category_dict[category]
 
             # Create figure
-            fig = pyplot.figure(figsize=(65, 85))
+            fig = pyplot.figure(figsize=(
+                (65, 85) if 'ARG' in element_name
+                else (25,85)))
             supersubfigs = fig.subfigures(
                 nrows=2,
                 ncols=1,
                 height_ratios=[1,20]
             )
-            supersubfigs[0].suptitle(element_name, fontsize=90, y=.75)
+            supersubfigs[0].suptitle(element_name, fontsize=110, y=.75)
 
-            subfigs = supersubfigs[1].subfigures(
-                nrows=2,
-                ncols=7,
-                wspace=0,
-                hspace=0,
-                width_ratios=[10,2,20,20,20,20,1],
-                height_ratios=[1,80]
-            )
+            if 'MGE' not in element_name:
+                subfigs = supersubfigs[1].subfigures(
+                    nrows=2,
+                    ncols=7,
+                    wspace=0,
+                    hspace=0,
+                    width_ratios=[12,2,20,20,20,20,1],
+                    height_ratios=[1,80]
+                )
+            else:
+                subfigs = supersubfigs[1].subfigures(
+                    nrows=2,
+                    #ncols=6,
+                    ncols=4,
+                    wspace=0,
+                    hspace=0,
+                    #width_ratios=[12,2,20,20,20,1],
+                    width_ratios=[12,2,20,1],
+                    height_ratios=[1,80]
+                )
 
             # Create heatmap legend
             data = numpy.array(label_matrix).reshape(len(label_matrix),1)
@@ -143,54 +164,109 @@ class HeatmapAnalyzer:
                 cbar=False,
                 cmap="viridis",
                 xticklabels=False,
-                vmin=0, vmax=numpy.max(label_matrix))
+                vmin=(numpy.max(label_matrix) - 7 if 'MGE' in element_name else 0), 
+                vmax=numpy.max(label_matrix))
             pyplot.sca(axs1)
             pyplot.yticks(
-                label_pos, list(category_dict.keys()), fontsize=50, rotation=0)
+                label_pos, list(category_dict.keys()), fontsize=65, rotation=0)
 
             # Going through organsims
-            organism_list = ['BF', 'FMT', 'PPS', 'Mock']
-            for index, organism in enumerate(organism_list):
-                axs = subfigs[1][2+index].subfigures(
-                    nrows=1,
-                    ncols=2,
-                    wspace=-0.1,
-                    width_ratios=[6,1])
-                subfigs[0][index+2].suptitle(organism, fontsize=70, y=.85)
-                data = numpy.array(matrix_list[index])
+            if 'MGE' not in element_name:
+                organism_list = ['BF', 'FMT', 'PPS', 'MOCK']
+                for index, organism in enumerate(organism_list):
+                    axs = subfigs[1][2+index].subfigures(
+                        nrows=1,
+                        ncols=2,
+                        wspace=-0.1,
+                        width_ratios=[6,1])
+                    subfigs[0][index+2].suptitle(organism, fontsize=90, y=.95)
+                    data = numpy.array(matrix_list[index])
 
-                sub_axs = axs[0].subplots(1,6)
-                axs[0].suptitle('TELSeq', fontsize=55)
+                    sub_axs = axs[0].subplots(1,6)
+                    axs[0].suptitle('TELSeq', fontsize=70)
+                    pacbio_index_start = 18
+                    for column in range(6):
+                        seaborn.heatmap(
+                            data[:,column*3:column*3+3],
+                            ax=sub_axs[column],
+                            cbar=False,
+                            cmap="viridis",
+                            yticklabels=False,
+                            xticklabels=False,
+                            vmin=0, 
+                            vmax=numpy.max(label_matrix))
+                        pyplot.sca(sub_axs[column])
+                        pyplot.xlabel(x_axis_list[index][column], fontsize=65, rotation=90)
 
-                for column in range(6):
+                    axs[0].subplots_adjust(wspace=0.05)
+
+                    sub_axs1 = axs[1].subplots(1,1)
+                    axs[1].suptitle('PacBio', fontsize=70, x=0.30)
                     seaborn.heatmap(
-                        data[:,column*3:column*3+3],
-                        ax=sub_axs[column],
+                        data[:,pacbio_index_start:],
+                        ax=sub_axs1,
                         cbar=False,
                         cmap="viridis",
                         yticklabels=False,
                         xticklabels=False,
-                        vmin=0, vmax=numpy.max(label_matrix))
+                        vmin=0, 
+                        vmax=numpy.max(label_matrix))
+            else:
+                axs = subfigs[1][2].subfigures(
+                    nrows=1,
+                    ncols=2,
+                    wspace=-0.1,
+                    width_ratios=[6,1])
+                data = numpy.array(matrix_list)
+
+                sub_axs = axs[0].subplots(1,6)
+                axs[0].suptitle('TELSeq', fontsize=70)
+                pacbio_index_start = 18
+                for column in range(6):
+                    if ((column == 5)
+                        and ('BF' in element_name)):    # Must remove outlier
+                        pacbio_index_start = 17
+                        seaborn.heatmap(
+                            data[:,column*3:column*3+2],
+                            ax=sub_axs[column],
+                            cbar=False,
+                            cmap="viridis",
+                            yticklabels=False,
+                            xticklabels=False,
+                            vmin=numpy.max(label_matrix) - 7, 
+                            vmax=numpy.max(label_matrix))
+                    else:
+                        seaborn.heatmap(
+                            data[:,column*3:column*3+3],
+                            ax=sub_axs[column],
+                            cbar=False,
+                            cmap="viridis",
+                            yticklabels=False,
+                            xticklabels=False,
+                            vmin=numpy.max(label_matrix) - 7, 
+                            vmax=numpy.max(label_matrix))
                     pyplot.sca(sub_axs[column])
-                    pyplot.xlabel(x_axis_list[index][column], fontsize=50, rotation=90)
+                    pyplot.xlabel(x_axis_list[column], fontsize=65, rotation=90)
 
                 axs[0].subplots_adjust(wspace=0.05)
 
                 sub_axs1 = axs[1].subplots(1,1)
-                axs[1].suptitle('PacBio', fontsize=55, x=0.40)
+                axs[1].suptitle('PacBio', fontsize=70, x=0.30)
                 seaborn.heatmap(
-                    data[:,18:],
+                    data[:,pacbio_index_start:],
                     ax=sub_axs1,
                     cbar=False,
                     cmap="viridis",
                     yticklabels=False,
                     xticklabels=False,
-                    vmin=0, vmax=numpy.max(label_matrix))
+                    vmin=numpy.max(label_matrix) - 7, 
+                    vmax=numpy.max(label_matrix))
+            
 
             if not(os.path.exists(output_folder)):
                 os.makedirs(output_folder)
 
-            pyplot.gcf().subplots_adjust(top=0.95, bottom=0.05)
+            pyplot.gcf().subplots_adjust(top=0.95, bottom=0.1)
             pyplot.savefig(output_folder + file_prefix + heatmap_ext)
             pyplot.close()
 
@@ -227,22 +303,20 @@ class HeatmapAnalyzer:
                         self.other_class_dict, 'ARG_bio_metals', 'ARG - Biocides/Metals')
             
         if self.mge_analysis:
-            for tuple in self.mge_bool_dict:
-                if not(self.mge_bool_dict[tuple]):
-                    self.mge_type_dict[tuple[0]] -= 1
-                    if self.mge_type_dict[tuple[0]] == 0:
-                        self.mge_type_dict.pop(tuple[0])
+            for org_index, organism in enumerate(self.mge_bool_dict):
+                temp_mge_type_dict = {k:v for k,v in self.mge_type_dict.items()}
+                for tuple in self.mge_bool_dict[organism]:
+                    if not(self.mge_bool_dict[organism][tuple]):
+                        temp_mge_type_dict[tuple[0]] -= 1
+                        if temp_mge_type_dict[tuple[0]] == 0:
+                            temp_mge_type_dict.pop(tuple[0])
 
-            mge_matrix_list = list()
-            mge_x_axis_list = list()
-            for heatmap in self.mge_heatmap_list:
                 # output_tuple = (mge_matrix, mge_x_axis)
-                output_tuple = heatmap.make_map(
-                    self.mge_bool_dict, list(self.mge_type_dict.keys()))
-                mge_matrix_list.append(output_tuple[0])
-                mge_x_axis_list.append(output_tuple[1])
+                output_tuple = self.mge_heatmap_list[org_index].make_map(
+                    self.mge_bool_dict[organism], list(temp_mge_type_dict.keys()))
+                heatmap_maker(output_tuple[0], output_tuple[1],
+                                temp_mge_type_dict, 'MGE_' + organism, 'MGE - ' + organism)
 
-            heatmap_maker(mge_matrix_list, mge_x_axis_list,
-                          self.mge_type_dict, 'MGE', 'MGE')
+            
 
             

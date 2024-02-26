@@ -65,28 +65,28 @@ class IndivAbundance:
             for group, relative_abundance in intermediate_values.items():
                 self.relative_abundance[group] = log10(relative_abundance)
 
+        # # If mge analysis, take the logarithm for each type
+        # else:
+        #     intermediate_values = dict()
+        #     for accession, count in self.absolute_abundance.items():
+
+        #         # If this is the first time we encounter mge type
+        #         if self.mge_annot[accession] not in intermediate_values:
+        #             intermediate_values[self.mge_annot[accession]] = 0
+
+        #         # Add abundance relative to gene length and sample group file size
+        #         intermediate_values[self.mge_annot[accession]] += (
+        #             (100.0 * float(count))/(float(gene_length[accession]*file_size))
+        #         )
+        #     for group, relative_abundance in intermediate_values.items():
+        #         self.relative_abundance[group] = log10(relative_abundance)
+
         # If mge analysis, take the logarithm for each accession
         else:
-            intermediate_values = dict()
             for accession, count in self.absolute_abundance.items():
-
-                # If this is the first time we encounter mge type
-                if self.mge_annot[accession] not in intermediate_values:
-                    intermediate_values[self.mge_annot[accession]] = 0
-
-                # Add abundance relative to gene length and sample group file size
-                intermediate_values[self.mge_annot[accession]] += (
+                self.relative_abundance[accession] = log10(
                     (100.0 * float(count))/(float(gene_length[accession]*file_size))
                 )
-            for group, relative_abundance in intermediate_values.items():
-                self.relative_abundance[group] = log10(relative_abundance)
-
-        # # If mge analysis, take the logarithm for each accession
-        # else:
-            # for accession, count in self.absolute_abundance.items():
-            #     self.relative_abundance[accession] = log10(
-            #         (100.0 * float(count))/(float(gene_length[accession]*file_size))
-            #     )
         
 
     def get_abundance(self):

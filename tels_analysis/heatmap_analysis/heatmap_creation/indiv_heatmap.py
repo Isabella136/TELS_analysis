@@ -6,7 +6,7 @@ class IndivHeatmap:
         self.organism = organism
         self.antimicrobial = antimicrobial
         self.indiv_point_dict = indiv_point_dict
-        self.indiv_point_list = list(self.indiv_point_dict.keys())
+        self.indiv_point_list = [k for k in self.indiv_point_dict]
 
         self.columns = [
             [0]*len(self.indiv_point_dict), [0]*len(self.indiv_point_dict), [0]*len(self.indiv_point_dict),  # V2 RES
@@ -55,9 +55,9 @@ class IndivHeatmap:
                     if arg_class == "Drug and biocide and metal resistance":
                         arg_class = "Drug biocide\nand metal"
                     if arg_class == "Cationic antimicrobial peptides":
-                        arg_class = "Cationic antimi-\ncrobial peptides"
+                        arg_class = "Cationic peptides"
                     if arg_class == "Phenolic compound resistance":
-                        arg_class = "Phenolic\ncompound"
+                        arg_class = "Phenolic cpd."
                     if 'resistance' in arg_class:
                         arg_class = arg_class[:-11]
                     bool_dict[(arg_class, arg_mechansism)] = True
